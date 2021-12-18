@@ -1,5 +1,4 @@
 use gl;
-use std;
 use std::ffi::{CStr, CString};
 
 pub struct Program {

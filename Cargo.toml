@@ -1,9 +1,9 @@
 [package]
-name = "RustGraphics"
+name = "rust_graphics"
 version = "0.1.0"
 authors = ["durasel74 <diman174cheb@mail.ru>"]
-edition = "2018"
+edition = "2021"
 
-[dependencies]
-gl = "0.14.0"
-sdl2 = "0.34.5"
+[dependencies.sdl2]
+version = "0.35"
+features = ["bundled", "static-link"]
