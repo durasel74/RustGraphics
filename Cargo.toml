@@ -7,3 +7,6 @@ edition = "2021"
 [dependencies.sdl2]
 version = "0.35"
 features = ["bundled", "static-link"]
+
+[dependencies]
+gl = "0.14"
