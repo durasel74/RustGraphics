@@ -111,15 +111,11 @@ fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::type
     }
 
     let mut success: gl::types::GLint = 1;
-    unsafe {
-        gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success);
-    }
+    unsafe { gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success); }
 
     if success == 0 {
         let mut len: gl::types::GLint = 0;
-        unsafe {
-            gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len);
-        }
+        unsafe { gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len); }
 
         let error = create_whitespace_cstring_with_len(len as usize);
 
