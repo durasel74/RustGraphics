@@ -1,5 +1,4 @@
 use gl;
-use std::ffi::{ CString, CStr };
 use super::Shader;
 
 pub struct Program {
@@ -8,49 +7,45 @@ pub struct Program {
 
 impl Program {
     pub fn from_shaders(shaders: &[Shader]) -> Result<Program, String> {
-        let program_id = unsafe { gl::CreateProgram() };
+        let id = unsafe { gl::CreateProgram() };
         for shader in shaders {
-            unsafe { gl::AttachShader(program_id, shader.id()); }
+            unsafe { gl::AttachShader(id, shader.id()); }
         }
-        unsafe { gl::LinkProgram(program_id); }
+        unsafe { gl::LinkProgram(id); }
 
+        let link_result = Self::get_link_result(id)?;
+        for shader in shaders {
+            unsafe { gl::DetachShader(id, shader.id()); }
+        }
+        Ok(Program { id: link_result })
+    }
+
+    fn get_link_result(id: u32) -> Result<u32, String>{
         let mut success: gl::types::GLint = 1;
-        unsafe { gl::GetProgramiv(program_id, gl::LINK_STATUS, &mut success); }
+        unsafe { gl::GetProgramiv(id, gl::LINK_STATUS, &mut success); }
 
         if success == 0 {
             let mut len: gl::types::GLint = 0;
-            unsafe { gl::GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len); }
-            let error = create_whitespace_cstring_with_len(len as usize);
+            unsafe { gl::GetProgramiv(id, gl::INFO_LOG_LENGTH, &mut len); }
+            let error = super::create_string_buffer(len as usize);
             unsafe {
-                gl::GetProgramInfoLog(
-                    program_id,
-                    len,
-                    std::ptr::null_mut(),
+                gl::GetProgramInfoLog(id, len, std::ptr::null_mut(),
                     error.as_ptr() as *mut gl::types::GLchar
                 );
             }
             Err(error.to_string_lossy().into_owned())
-        } else {
-            for shader in shaders {
-                unsafe { gl::DetachShader(program_id, shader.id()); }
-            }
-            Ok(Program { id: program_id })
-        }
+        } else { Ok(id) }
     }
 
     pub fn id(&self) -> gl::types::GLuint { self.id }
 
-    pub fn run(&self) { unsafe { gl::UseProgram(self.id); } }
+    pub fn run(&self) { 
+        unsafe { gl::UseProgram(self.id); } 
+    }
 }
 
 impl Drop for Program {
     fn drop(&mut self) {
         unsafe { gl::DeleteProgram(self.id); }
     }
-}
-
-fn create_whitespace_cstring_with_len(len: usize) -> CString {
-    let mut buffer: Vec<u8> = Vec::with_capacity(len + 1);
-    buffer.extend([b' '].iter().cycle().take(len));
-    unsafe { CString::from_vec_unchecked(buffer) }
 }
