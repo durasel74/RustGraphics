@@ -1,5 +1,5 @@
-use gl;
 use std::ffi::CStr;
+use gl;
 
 pub struct Shader {
     id: gl::types::GLuint,

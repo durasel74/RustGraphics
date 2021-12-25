@@ -1,8 +1,12 @@
 #version 330 core
 
+in VS_OUTPUT {
+    vec3 Color;
+} IN;
+
 out vec4 Color;
 
 void main()
 {
-    Color = vec4(0.8f, 0.2f, 0.7f, 1.0f);
+    Color = vec4(IN.Color, 1.0f);
 }

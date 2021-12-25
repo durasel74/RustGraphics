@@ -31,9 +31,9 @@ fn main() {
         &[vert_shader, frag_shader]).unwrap();
 
     let vertices: Vec<f32> = vec![
-        -0.5, -0.5, 0.0,
-        0.5, -0.5, 0.0,
-        0.0, 0.5, 0.0
+        0.5, -0.5, 0.0,   0.8, 0.2, 0.8,
+        -0.5, -0.5, 0.0,  0.8, 0.2, 1.0,
+        0.0,  0.5, 0.0,   0.9, 0.2, 0.8,
     ];
 
     let vbo = create_vbo(vertices);
@@ -41,7 +41,7 @@ fn main() {
 
     unsafe {
         gl::Viewport(0, 0, 800, 600);
-        gl::ClearColor(0.3, 0.5, 0.7, 1.0);
+        gl::ClearColor(0.4, 0.7, 0.8, 1.0);
     };
 
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -86,10 +86,24 @@ fn create_vao(vbo: u32) -> u32 {
     unsafe {
         gl::BindVertexArray(vao);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+
         gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE,
-            (3 * std::mem::size_of::<f32>()) as gl::types::GLint, 
+        gl::VertexAttribPointer(
+            0,
+            3,
+            gl::FLOAT,
+            gl::FALSE,
+            (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
             std::ptr::null()
+        );
+        gl::EnableVertexAttribArray(1);
+        gl::VertexAttribPointer(
+            1,
+            3,
+            gl::FLOAT,
+            gl::FALSE,
+            (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
+            (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
         );
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
