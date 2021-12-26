@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["durasel74 <diman174cheb@mail.ru>"]
 edition = "2021"
 
+[dependencies]
+gl = "0.14"
+
 [dependencies.sdl2]
 version = "0.35"
 features = ["bundled", "static-link"]
-
-[dependencies]
-gl = "0.14"

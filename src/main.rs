@@ -38,10 +38,11 @@ fn main() {
 
     let vbo = create_vbo(vertices);
     let vao = create_vao(vbo);
+    shader_program.run();
 
-    unsafe {
-        gl::Viewport(0, 0, 800, 600);
+    unsafe { 
         gl::ClearColor(0.4, 0.7, 0.8, 1.0);
+
     };
 
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -53,13 +54,14 @@ fn main() {
             }
         }
 
+        let window_size = window.size();
+        unsafe { gl::Viewport(0, 0, window_size.0 as i32, window_size.1 as i32); };
+
         unsafe { gl::Clear(gl::COLOR_BUFFER_BIT); };
-        shader_program.run();
         unsafe {
             gl::BindVertexArray(vao);
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+            gl::DrawArrays(gl::POINTS, 0, 3);
         }
-        
         window.gl_swap_window();
     }
 }
@@ -88,20 +90,12 @@ fn create_vao(vbo: u32) -> u32 {
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
 
         gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(
-            0,
-            3,
-            gl::FLOAT,
-            gl::FALSE,
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE,
             (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
             std::ptr::null()
         );
         gl::EnableVertexAttribArray(1);
-        gl::VertexAttribPointer(
-            1,
-            3,
-            gl::FLOAT,
-            gl::FALSE,
+        gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE,
             (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
             (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
         );
