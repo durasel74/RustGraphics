@@ -30,10 +30,36 @@ fn main() {
     let shader_program = render_gl::Program::from_shaders(
         &[vert_shader, frag_shader]).unwrap();
 
+    // // Triangle
+    // let vertices: Vec<f32> = vec![
+    //     0.5, -0.5, 0.0,   0.8, 0.2, 0.8,
+    //     -0.5, -0.5, 0.0,  0.8, 0.2, 1.0,
+    //     0.0,  0.5, 0.0,   0.9, 0.2, 0.8,
+    // ];
+
+    // // Test square
+    // let vertices: Vec<f32> = vec![
+    //     0.5, -0.5, 0.0,   0.8, 0.2, 0.8,
+    //     -0.5, -0.5, 0.0,  0.8, 0.2, 1.0,
+    //     -0.5,  0.5, 0.0,   0.9, 0.2, 0.8,
+    //     0.5,  0.5, 0.0,   0.9, 0.2, 0.8,
+    //     0.5, -0.5, 0.0,   0.8, 0.2, 0.8,
+    //     -0.5, 0.5, 0.0,  0.8, 0.2, 1.0,
+    // ];
+
+    // Herringbone
     let vertices: Vec<f32> = vec![
-        0.5, -0.5, 0.0,   0.8, 0.2, 0.8,
-        -0.5, -0.5, 0.0,  0.8, 0.2, 1.0,
-        0.0,  0.5, 0.0,   0.9, 0.2, 0.8,
+        0.0, 0.0, 0.0,   0.0, 0.48, 0.1,
+        -0.5, -0.5, 0.0,   0.0, 0.35, 0.1,
+        0.5, -0.5, 0.0,   0.0, 0.35, 0.1,
+
+        0.0, 0.4, 0.0,   0.0, 0.52, 0.1,
+        -0.4, -0.1, 0.0,   0.0, 0.45, 0.1,
+        0.4, -0.1, 0.0,   0.0, 0.45, 0.1,
+
+        0.0, 0.7, 0.0,   0.1, 0.6, 0.2,
+        -0.3, 0.3, 0.0,   0.0, 0.5, 0.1,
+        0.3, 0.3, 0.0,   0.0, 0.5, 0.1,
     ];
 
     let vbo = create_vbo(vertices);
@@ -41,7 +67,7 @@ fn main() {
     shader_program.run();
 
     unsafe { 
-        gl::ClearColor(0.4, 0.7, 0.8, 1.0);
+        gl::ClearColor(0.5, 0.1, 0.0, 1.0);
 
     };
 
@@ -60,7 +86,7 @@ fn main() {
         unsafe { gl::Clear(gl::COLOR_BUFFER_BIT); };
         unsafe {
             gl::BindVertexArray(vao);
-            gl::DrawArrays(gl::POINTS, 0, 3);
+            gl::DrawArrays(gl::TRIANGLES, 0, 9);
         }
         window.gl_swap_window();
     }
