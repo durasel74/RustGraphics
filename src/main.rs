@@ -1,6 +1,7 @@
 mod render_gl;
 
 use sdl2;
+use sdl2::event::WindowEvent;
 use gl;
 
 fn main() {
@@ -72,16 +73,9 @@ fn main() {
     };
 
     let mut event_pump = sdl_context.event_pump().unwrap();
-    'main: loop {
-        for event in event_pump.poll_iter() {
-            match event {
-                sdl2::event::Event::Quit {..} => break 'main,
-                _ => (),
-            }
-        }
-
-        let window_size = window.size();
-        unsafe { gl::Viewport(0, 0, window_size.0 as i32, window_size.1 as i32); };
+    let mut is_running = true;
+    while is_running {
+        is_running = event_check(&mut event_pump);
 
         unsafe { gl::Clear(gl::COLOR_BUFFER_BIT); };
         unsafe {
@@ -90,6 +84,26 @@ fn main() {
         }
         window.gl_swap_window();
     }
+}
+
+fn event_check(event_pump: &mut sdl2::EventPump) -> bool {
+    for event in event_pump.poll_iter() {
+        match event {
+            sdl2::event::Event::Quit {..} => return false,
+            sdl2::event::Event::KeyUp { 
+                keycode: Some(sdl2::keyboard::Keycode::Escape), ..} => 
+                return false,
+            sdl2::event::Event::Window { 
+                win_event: WindowEvent::Resized(width, height), ..} => 
+                update_viewport(width, height),
+            _ => (),
+        }
+    }
+    return true;
+}
+
+fn update_viewport(width: i32, height: i32) {
+    unsafe { gl::Viewport(0, 0, width, height); };
 }
 
 fn create_vbo(vertices: Vec<f32>) -> u32{
