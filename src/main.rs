@@ -1,5 +1,7 @@
 mod render_gl;
+mod figures;
 
+use std::ffi::CString;
 use sdl2;
 use sdl2::event::WindowEvent;
 use gl;
@@ -23,7 +25,11 @@ fn main() {
     gl::load_with(|s| video_subsystem
         .gl_get_proc_address(s) as *const std::os::raw::c_void);
 
-    use std::ffi::CString;
+    let figure: figures::Figure = figures::square();
+    let vbo = create_vbo(&figure.vertices);
+    let ebo = create_ebo(&figure.indices);
+    let vao = create_vao(vbo);
+
     let vert_shader = render_gl::Shader::from_vert_source(
         &CString::new(include_str!("Shaders\\triangle.vert")).unwrap()).unwrap();
     let frag_shader = render_gl::Shader::from_frag_source(
@@ -31,72 +37,27 @@ fn main() {
     let shader_program = render_gl::Program::from_shaders(
         &[vert_shader, frag_shader]).unwrap();
 
-    // // Triangle
-    // let vertices: Vec<f32> = vec![
-    //     0.5, -0.5, 0.0,   0.8, 0.2, 0.8,
-    //     -0.5, -0.5, 0.0,  0.8, 0.2, 1.0,
-    //     0.0,  0.5, 0.0,   0.9, 0.2, 0.8,
-    // ];
-
-    // Square
-    let vertices: Vec<f32> = vec![
-        -0.5,  0.5, 0.0,   1.0, 1.0, 1.0,
-        0.5, 0.5, 0.0,   0.9, 0.9, 0.9,
-        0.5, -0.5, 0.0,   0.8, 0.8, 0.8,
-        -0.5,  -0.5, 0.0,   0.9, 0.9, 0.9,
-    ];
-
-    // // Violet gradient
-    // -0.5,  0.5, 0.0,   0.8, 0.2, 0.8,
-    // -0.5, -0.5, 0.0,   0.9, 0.2, 0.8,
-    // 0.5, -0.5, 0.0,   0.8, 0.2, 0.8,
-    // 0.5,  0.5, 0.0,   0.8, 0.2, 1.0,
-
-    let indices: Vec<u32> = vec![
-        0, 1, 2,
-        2, 3, 0,
-    ]; 
-
-    // // Herringbone
-    // let vertices: Vec<f32> = vec![
-    //     0.0, 0.0, 0.0,   0.0, 0.48, 0.1,
-    //     -0.5, -0.5, 0.0,   0.0, 0.35, 0.1,
-    //     0.5, -0.5, 0.0,   0.0, 0.35, 0.1,
-
-    //     0.0, 0.4, 0.0,   0.0, 0.52, 0.1,
-    //     -0.4, -0.1, 0.0,   0.0, 0.45, 0.1,
-    //     0.4, -0.1, 0.0,   0.0, 0.45, 0.1,
-
-    //     0.0, 0.7, 0.0,   0.1, 0.6, 0.2,
-    //     -0.3, 0.3, 0.0,   0.0, 0.5, 0.1,
-    //     0.3, 0.3, 0.0,   0.0, 0.5, 0.1,
-    // ];
-
-    let vbo = create_vbo(vertices);
-    let ebo = create_ebo(indices);
-    let vao = create_vao(vbo, ebo);
-
     unsafe { 
         gl::ClearColor(0.1, 0.1, 0.1, 1.0); 
-        gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL)
-    };
+        gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+    }
     
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut is_running = true;
     while is_running {
         is_running = event_check(&mut event_pump);
 
-        let ok = 0 as gl::types::GLuint;
-
-        unsafe { gl::Clear(gl::COLOR_BUFFER_BIT); };
         unsafe {
+            gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BindVertexArray(vao);
             shader_program.run();
-            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ok as *const gl::types::GLvoid);
+            gl::DrawElements(gl::TRIANGLES, figure.indices.len() as i32, 
+                gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
         }
         window.gl_swap_window();
     }
+    unsafe { gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0); }
 }
 
 fn event_check(event_pump: &mut sdl2::EventPump) -> bool {
@@ -119,7 +80,7 @@ fn update_viewport(width: i32, height: i32) {
     unsafe { gl::Viewport(0, 0, width, height); };
 }
 
-fn create_vbo(vertices: Vec<f32>) -> u32 {
+fn create_vbo(vertices: &Vec<f32>) -> u32 {
     let mut vbo: gl::types::GLuint = 0;
     unsafe { gl::GenBuffers(1, &mut vbo); }
     unsafe {
@@ -135,7 +96,7 @@ fn create_vbo(vertices: Vec<f32>) -> u32 {
     return vbo
 }
 
-fn create_ebo(indices: Vec<u32>) -> u32 {
+fn create_ebo(indices: &Vec<u32>) -> u32 {
     let mut ebo: gl::types::GLuint = 0;
     unsafe { gl::GenBuffers(1, &mut ebo); }
     unsafe {
@@ -151,13 +112,12 @@ fn create_ebo(indices: Vec<u32>) -> u32 {
     return ebo
 }
 
-fn create_vao(vbo: u32, ebo: u32) -> u32 {
+fn create_vao(vbo: u32) -> u32 {
     let mut vao: gl::types::GLuint = 0;
     unsafe { gl::GenVertexArrays(1, &mut vao); }
     unsafe {
         gl::BindVertexArray(vao);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
 
         gl::EnableVertexAttribArray(0);
         gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE,
@@ -169,9 +129,7 @@ fn create_vao(vbo: u32, ebo: u32) -> u32 {
             (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
             (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
         );
-
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
     }
     return vao
