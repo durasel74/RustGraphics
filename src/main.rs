@@ -1,6 +1,8 @@
 mod render_gl;
 mod figures;
 
+use std::fs;
+use std::time::Instant;
 use std::ffi::CString;
 use sdl2;
 use sdl2::event::WindowEvent;
@@ -25,21 +27,42 @@ fn main() {
     gl::load_with(|s| video_subsystem
         .gl_get_proc_address(s) as *const std::os::raw::c_void);
 
-    let figure: figures::Figure = figures::square();
+    let figure: figures::Figure = figures::triangle90();
     let vbo = create_vbo(&figure.vertices);
     let ebo = create_ebo(&figure.indices);
-    let vao = create_vao(vbo);
+    let vao = create_vao_position(vbo);
 
-    let vert_shader = render_gl::Shader::from_vert_source(
-        &CString::new(include_str!("Shaders\\triangle.vert")).unwrap()).unwrap();
-    let frag_shader = render_gl::Shader::from_frag_source(
-        &CString::new(include_str!("Shaders\\triangle.frag")).unwrap()).unwrap();
-    let shader_program = render_gl::Program::from_shaders(
-        &[vert_shader, frag_shader]).unwrap();
+    let figure2: figures::Figure = figures::triangle90alter();
+    let vbo2 = create_vbo(&figure2.vertices);
+    let ebo2 = create_ebo(&figure2.indices);
+    let vao2 = create_vao_position(vbo2);
+
+    let mut source = fs::read_to_string("Shaders\\triangles.vert").unwrap();
+    let vert_shader = render_gl::Shader::from_source(&source, gl::VERTEX_SHADER).unwrap();
+
+    source = fs::read_to_string("Shaders\\first_triangle.frag").unwrap();
+    let frag_shader = render_gl::Shader::from_source(&source, gl::FRAGMENT_SHADER).unwrap();
+    let shader_program = render_gl::Program::from_shaders(&[&vert_shader, &frag_shader]).unwrap();
+    
+    source = fs::read_to_string("Shaders\\second_triangle.frag").unwrap();
+    let frag_shader2 = render_gl::Shader::from_source(&source, gl::FRAGMENT_SHADER).unwrap();
+    let shader_program2 = render_gl::Program::from_shaders(&[&vert_shader, &frag_shader2]).unwrap();
+
+        
+
+    let uniform_name = CString::new("ourColor").unwrap();
+    let vertex_color_location = unsafe{ gl::GetUniformLocation(shader_program.id(), 
+        uniform_name.as_ptr() as *const gl::types::GLchar) };
+    
+    let mut figure1color = figures::RGBA::new(0.4, 0.4, 1.0, 1.0);
+    
+    let now_time = Instant::now();
+
+
 
     unsafe { 
-        gl::ClearColor(0.1, 0.1, 0.1, 1.0); 
-        gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+        gl::ClearColor(0.2, 0.2, 0.2, 1.0);
+        gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
     }
     
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -52,7 +75,21 @@ fn main() {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BindVertexArray(vao);
             shader_program.run();
+
+            let time = (now_time.elapsed().as_millis() as f32) / 500.0;
+            figure1color.r = time.sin().abs();
+            figure1color.g = time.sin().abs();
+            figure1color.b = time.sin().abs();
+            gl::Uniform4f(vertex_color_location, figure1color.r, figure1color.g, 
+                figure1color.b, figure1color.a);
+
             gl::DrawElements(gl::TRIANGLES, figure.indices.len() as i32, 
+                gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
+
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo2);
+            gl::BindVertexArray(vao2);
+            shader_program2.run();
+            gl::DrawElements(gl::TRIANGLES, figure2.indices.len() as i32, 
                 gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
         }
         window.gl_swap_window();
@@ -112,7 +149,7 @@ fn create_ebo(indices: &Vec<u32>) -> u32 {
     return ebo
 }
 
-fn create_vao(vbo: u32) -> u32 {
+fn create_vao_position(vbo: u32) -> u32 {
     let mut vao: gl::types::GLuint = 0;
     unsafe { gl::GenVertexArrays(1, &mut vao); }
     unsafe {
@@ -121,14 +158,10 @@ fn create_vao(vbo: u32) -> u32 {
 
         gl::EnableVertexAttribArray(0);
         gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE,
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
+            (3 * std::mem::size_of::<f32>()) as gl::types::GLint,
             std::ptr::null()
         );
-        gl::EnableVertexAttribArray(1);
-        gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE,
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
-            (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid
-        );
+
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
     }

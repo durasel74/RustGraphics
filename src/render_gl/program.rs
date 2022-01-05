@@ -6,7 +6,7 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn from_shaders(shaders: &[Shader]) -> Result<Program, String> {
+    pub fn from_shaders(shaders: &[&Shader]) -> Result<Program, String> {
         let id = unsafe { gl::CreateProgram() };
         for shader in shaders {
             unsafe { gl::AttachShader(id, shader.id()); }
