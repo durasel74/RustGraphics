@@ -3,7 +3,7 @@ use gl;
 use gl::types::{ GLenum, GLuint };
 use super::ShaderError;
 
-/// Представляет шейдер
+/// Представляет косвенный объект шейдера OpenGL.
 #[derive(Clone, Eq, PartialEq)]
 pub struct Shader {
     id: u32,
@@ -13,11 +13,11 @@ impl Shader {
     /// Создает шейдер из строки с кодом. 
     /// Требуется указать тип шейдера для правильной компиляции.
     pub fn from_source(source: &str, shader_type: GLenum) -> Result<Shader, ShaderError> {
-        let csource = ffi::CString::new(source);
-        if let Result::Err(err) = csource {
-            return Err(ShaderError::ConvertCStringError(err));
-        }
-        let csource = csource.unwrap();
+        let convert_result = ffi::CString::new(source);
+        let csource = match convert_result {
+            Ok(source) => source,
+            Err(err) => return Err(ShaderError::ConvertCStringError(err)),
+        };
 
         let id = unsafe { gl::CreateShader(shader_type) };
         unsafe {
@@ -29,7 +29,7 @@ impl Shader {
         Ok( Shader { id: compile_result, shader_type })
     }
 
-    // Возвращает идентификатор шейдера или ошибку при неудачной компиляции.
+    // Возвращает идентификатор шейдера или ошибку при неудачной компиляции
     fn get_compile_result(id: u32) -> Result<u32, ShaderError> {
         let mut success = 1;
         unsafe { gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success); }

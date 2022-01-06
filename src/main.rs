@@ -1,12 +1,11 @@
 mod render_gl;
 mod figures;
 
-use std::fs;
-use std::time::Instant;
-use std::ffi::CString;
+use std::ffi;
 use sdl2;
 use sdl2::event::WindowEvent;
 use gl;
+use std::time::Instant;
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -27,6 +26,8 @@ fn main() {
     gl::load_with(|s| video_subsystem
         .gl_get_proc_address(s) as *const std::os::raw::c_void);
 
+    
+
     let figure: figures::Figure = figures::triangle90();
     let vbo = create_vbo(&figure.vertices);
     let ebo = create_ebo(&figure.indices);
@@ -37,20 +38,29 @@ fn main() {
     let ebo2 = create_ebo(&figure2.indices);
     let vao2 = create_vao_position(vbo2);
 
-    let mut source = fs::read_to_string("Shaders\\triangles.vert").unwrap();
-    let vert_shader = render_gl::Shader::from_source(&source, gl::VERTEX_SHADER).unwrap();
 
-    source = fs::read_to_string("Shaders\\first_triangle.frag").unwrap();
-    let frag_shader = render_gl::Shader::from_source(&source, gl::FRAGMENT_SHADER).unwrap();
-    let shader_program = render_gl::Program::from_shaders(&[&vert_shader, &frag_shader]).unwrap();
-    
-    source = fs::read_to_string("Shaders\\second_triangle.frag").unwrap();
-    let frag_shader2 = render_gl::Shader::from_source(&source, gl::FRAGMENT_SHADER).unwrap();
-    let shader_program2 = render_gl::Program::from_shaders(&[&vert_shader, &frag_shader2]).unwrap();
+    // Done
+    let vert_filename = "Shaders\\triangles.vert";
+    let frag1_filename = "Shaders\\first_triangle.frag";
+    let frag2_filename = "Shaders\\second_triangle.frag";
+
+    let shader_loadresult = render_gl::ShaderProgram::from_files(
+        vert_filename, frag1_filename);
+    let shader_program = match shader_loadresult {
+        Ok(program) => program,
+        Err(err) => { println!("{}", err); return }
+    };
+
+    let shader_loadresult = render_gl::ShaderProgram::from_files(
+        vert_filename, frag2_filename);
+    let shader_program2 = match shader_loadresult {
+        Ok(program) => program,
+        Err(err) => { println!("{}", err); return }
+    };
+    //
 
         
-
-    let uniform_name = CString::new("ourColor").unwrap();
+    let uniform_name = ffi::CString::new("ourColor").unwrap();
     let vertex_color_location = unsafe{ gl::GetUniformLocation(shader_program.id(), 
         uniform_name.as_ptr() as *const gl::types::GLchar) };
     
@@ -72,6 +82,7 @@ fn main() {
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
+            
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BindVertexArray(vao);
             shader_program.run();
