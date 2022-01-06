@@ -1,5 +1,6 @@
 mod render_gl;
 mod figures;
+mod glwindow;
 
 use std::ffi;
 use sdl2;
@@ -8,25 +9,7 @@ use gl;
 use std::time::Instant;
 
 fn main() {
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
-
-    let gl_attr = video_subsystem.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    gl_attr.set_context_version(3, 3);
-
-    let window = video_subsystem
-        .window("RustGraphics", 800, 600)
-        .opengl()
-        .resizable()
-        .build()
-        .unwrap();
-
-    let _gl_context = window.gl_create_context().unwrap();
-    gl::load_with(|s| video_subsystem
-        .gl_get_proc_address(s) as *const std::os::raw::c_void);
-
-    
+    let mut gl_window = glwindow::GLWindow::from_parameters("RustGraphics", 800, 600);
 
     let figure: figures::Figure = figures::triangle90();
     let vbo = create_vbo(&figure.vertices);
@@ -75,14 +58,13 @@ fn main() {
         gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
     }
     
-    let mut event_pump = sdl_context.event_pump().unwrap();
     let mut is_running = true;
     while is_running {
-        is_running = event_check(&mut event_pump);
+        is_running = gl_window.event_check();
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            
+
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BindVertexArray(vao);
             shader_program.run();
@@ -103,29 +85,9 @@ fn main() {
             gl::DrawElements(gl::TRIANGLES, figure2.indices.len() as i32, 
                 gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
         }
-        window.gl_swap_window();
+        gl_window.update();
     }
     unsafe { gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0); }
-}
-
-fn event_check(event_pump: &mut sdl2::EventPump) -> bool {
-    for event in event_pump.poll_iter() {
-        match event {
-            sdl2::event::Event::Quit {..} => return false,
-            sdl2::event::Event::KeyUp { 
-                keycode: Some(sdl2::keyboard::Keycode::Escape), ..} => 
-                return false,
-            sdl2::event::Event::Window { 
-                win_event: WindowEvent::Resized(width, height), ..} => 
-                update_viewport(width, height),
-            _ => (),
-        }
-    }
-    return true;
-}
-
-fn update_viewport(width: i32, height: i32) {
-    unsafe { gl::Viewport(0, 0, width, height); };
 }
 
 fn create_vbo(vertices: &Vec<f32>) -> u32 {
