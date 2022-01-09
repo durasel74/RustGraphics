@@ -72,7 +72,7 @@ impl GLWindow {
                         self.arrow_event = -1 },
                 
                 sdl2::event::Event::KeyUp {
-                    keycode: Some(sdl2::keyboard::Keycode::W), ..} => { 
+                    keycode: Some(sdl2::keyboard::Keycode::Tab), ..} => { 
                         self.draw_mode = (self.draw_mode + 1) % 3 },
 
                 _ => (),

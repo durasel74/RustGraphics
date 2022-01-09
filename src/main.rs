@@ -8,17 +8,24 @@ fn main() {
     // Запуск окна
     let mut gl_window = glwindow::GLWindow::from_parameters("RustGraphics", 700, 600);
 
-    // Загрузка вершин
     // let figure: figures::Figure = figures::create_circle(6, 50);
 
     // Пути к файлам шейдеров
     let vert_filename = "Shaders\\triangles.vert";
     let frag_filename = "Shaders\\triangles.frag";
+    let frag_wire_filename = "Shaders\\triangles_wire.frag";
 
     // Загрузка и компиляция шейдеров
     let shader_loadresult = render_gl::ShaderProgram::from_files(
         vert_filename, frag_filename);
     let shader_program = match shader_loadresult {
+        Ok(program) => program,
+        Err(err) => { println!("{}", err); return }
+    };
+
+    let shader_loadresult = render_gl::ShaderProgram::from_files(
+        vert_filename, frag_wire_filename);
+    let shader_wire_program = match shader_loadresult {
         Ok(program) => program,
         Err(err) => { println!("{}", err); return }
     };
@@ -46,11 +53,13 @@ fn main() {
             gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(gl_window.draw_mode));
 
             let figure: figures::Figure = figures::create_circle_gradient(vertices_count as u32, 55);
-
             gl::BindVertexArray(figure.vao);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, figure.ebo);
-            shader_program.run();
-            gl::DrawElements(gl::TRIANGLES, figure.indices.len() as i32, 
+
+            if gl_window.draw_mode != 0 { shader_wire_program.run(); }
+            else { shader_program.run(); }
+
+            gl::DrawElements(gl::TRIANGLES, figure.indices.len() as i32,
                 gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
         }
         gl_window.update();
