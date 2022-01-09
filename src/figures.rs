@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use gl;
 use gl::types::{ GLint, GLuint, GLsizeiptr, GLvoid };
 
@@ -143,4 +144,60 @@ pub fn square() -> Figure {
     new_figure.create_vao();
     new_figure.create_ebo();
     return new_figure;
+}
+
+pub fn create_circle(vertex_count: u32, radius: u32) -> Figure {
+    let normal_radius = (radius as f32) / 100.0;
+    let mut x: f32 = 0.0;
+    let mut y: f32 = 0.0;
+    let mut vertices: Vec<f32> = vec![x, y, 0.0,  1.0, 1.0, 1.0];
+    let mut indices: Vec<u32> = vec! [];
+    
+    let vertex_count_f32 = vertex_count as f32;
+    let mut vertex_index = 1;
+    for i in 0..vertex_count {
+        let angle = (2.0 * PI * i as f32) / vertex_count_f32;
+        x = normal_radius * angle.cos();
+        y = normal_radius * angle.sin();
+        vec_push_range(&mut vertices, vec![x, y, 0.0,  1.0, 1.0, 1.0]);
+
+        let mut next_index = (vertex_index + 1) % vertex_count;
+        next_index = next_index + vertex_count * (next_index == 0) as u32;
+        vec_push_range(&mut indices, vec![vertex_index, next_index, 0]);
+        vertex_index += 1;
+    }
+    let mut new_figure = Figure { vertices, indices, vbo: 0, vao: 0, ebo: 0 };
+    new_figure.create_vao();
+    new_figure.create_ebo();
+    return new_figure;
+}
+
+pub fn create_circle_gradient(vertex_count: u32, radius: u32) -> Figure {
+    let normal_radius = (radius as f32) / 100.0;
+    let mut x: f32 = 0.0;
+    let mut y: f32 = 0.0;
+    let mut vertices: Vec<f32> = vec![x, y, 0.0,  0.2, 0.2, 0.8];
+    let mut indices: Vec<u32> = vec! [];
+    
+    let vertex_count_f32 = vertex_count as f32;
+    let mut vertex_index = 1;
+    for i in 0..vertex_count {
+        let angle = (2.0 * PI * i as f32) / vertex_count_f32;
+        x = normal_radius * angle.cos();
+        y = normal_radius * angle.sin();
+        vec_push_range(&mut vertices, vec![x, y, 0.0,  0.2, (x / 2.0).abs(), (y / 2.0).abs()]);
+
+        let mut next_index = (vertex_index + 1) % vertex_count;
+        next_index = next_index + vertex_count * (next_index == 0) as u32;
+        vec_push_range(&mut indices, vec![vertex_index, next_index, 0]);
+        vertex_index += 1;
+    }
+    let mut new_figure = Figure { vertices, indices, vbo: 0, vao: 0, ebo: 0 };
+    new_figure.create_vao();
+    new_figure.create_ebo();
+    return new_figure;
+}
+
+pub fn vec_push_range<T>(vect: &mut Vec<T>, values: Vec<T>) {
+    for i in values { vect.push(i); }
 }

@@ -7,6 +7,8 @@ pub struct GLWindow {
     window: sdl2::video::Window,
     event_pump: sdl2::EventPump,
     gl_context: sdl2::video::GLContext,
+    pub arrow_event: i32,
+    pub draw_mode: u32,
 }
 impl GLWindow {
     /// Создает новое окно с параметрами по умолчанию.
@@ -35,7 +37,8 @@ impl GLWindow {
         gl::load_with(|s| video_subsystem
             .gl_get_proc_address(s) as *const std::os::raw::c_void);
 
-        GLWindow { window, event_pump, gl_context }
+        GLWindow { window, event_pump, gl_context, 
+            arrow_event: 0, draw_mode: 0 }
     }
 
     /// Обновляет окно.
@@ -54,6 +57,24 @@ impl GLWindow {
                 sdl2::event::Event::Window { 
                     win_event: WindowEvent::Resized(width, height), ..} => 
                         unsafe { gl::Viewport(0, 0, width, height); },
+
+                sdl2::event::Event::KeyUp { 
+                    keycode: Some(sdl2::keyboard::Keycode::Up), ..} => { 
+                        self.arrow_event = 1 },
+                sdl2::event::Event::KeyDown { 
+                    keycode: Some(sdl2::keyboard::Keycode::Up), repeat: true, ..} => { 
+                        self.arrow_event = 1 },
+                sdl2::event::Event::KeyUp { 
+                    keycode: Some(sdl2::keyboard::Keycode::Down), ..} => { 
+                        self.arrow_event = -1 },
+                sdl2::event::Event::KeyDown { 
+                    keycode: Some(sdl2::keyboard::Keycode::Down), repeat: true, ..} => { 
+                        self.arrow_event = -1 },
+                
+                sdl2::event::Event::KeyUp {
+                    keycode: Some(sdl2::keyboard::Keycode::W), ..} => { 
+                        self.draw_mode = (self.draw_mode + 1) % 3 },
+
                 _ => (),
             }
         }
