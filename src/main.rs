@@ -6,7 +6,7 @@ use gl;
 
 fn main() {
     // Запуск окна
-    let mut gl_window = glwindow::GLWindow::from_parameters("RustGraphics", 700, 600);
+    let mut gl_window = glwindow::GLWindow::from_parameters("RustGraphics", 800, 700);
 
     // let figure: figures::Figure = figures::create_circle(6, 50);
 
@@ -37,7 +37,7 @@ fn main() {
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
     }
 
-    let mut radius = 55;
+    let radius = 55;
     let mut vertices_count = 6;
     let mut inner_radius = 20;
     
@@ -59,9 +59,13 @@ fn main() {
             gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(gl_window.draw_mode));
 
-            // let figure: figures::Figure = figures::create_circle(vertices_count as u32, 55);
-            let figure: figures::Figure = figures::create_thor(vertices_count as u32, 
-                radius as u32, inner_radius as u32);
+            let figure: figures::Figure;
+            if gl_window.circles_mode == 0 {
+                figure = figures::create_thor(vertices_count as u32, 
+                    radius as u32, inner_radius as u32);
+            } else {
+                figure = figures::create_circle(vertices_count as u32, 55);
+            }
 
             gl::BindVertexArray(figure.vao);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, figure.ebo);
@@ -74,7 +78,6 @@ fn main() {
         }
         gl_window.update();
     }
-    unsafe { gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0); }
 }
 
 fn to_draw_mode(value: u32) -> gl::types::GLenum {

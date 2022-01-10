@@ -67,6 +67,17 @@ impl Figure {
         self.vbo = vbo;
     }
 }
+impl Drop for Figure {
+    fn drop(&mut self) {
+        unsafe {
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+            gl::BindVertexArray(0);
+            gl::DeleteBuffers(1, &self.vbo);
+            gl::DeleteBuffers(1, &self.ebo);
+            gl::DeleteVertexArrays(1, &self.vao);
+         }
+    }
+}
 
 pub fn triangle90() -> Figure {
     let mut new_figure = Figure {
@@ -187,10 +198,12 @@ pub fn create_thor(vertex_count: u32, radius: u32, inner_radius: u32) -> Figure 
         let angle = (2.0 * PI * i as f32) / vertex_count_f32;
         x = normal_radius * angle.cos();
         y = normal_radius * angle.sin();
-        vec_push_range(&mut vertices, vec![x, y, 0.0,  1.0, 1.0, 1.0]);
+        let gradient = ((-x + y) / 2.0) + normal_radius;
+        vec_push_range(&mut vertices, vec![x, y, 0.0,  0.2, gradient + 0.2, 1.0 - gradient / 2.0]);
         x = normal_inner_radius * angle.cos();
         y = normal_inner_radius * angle.sin();
-        vec_push_range(&mut vertices, vec![x, y, 0.0,  1.0, 1.0, 1.0]);
+        let gradient = ((-x + y) / 2.0) + normal_radius;
+        vec_push_range(&mut vertices, vec![x, y, 0.0,  0.1, gradient + 0.1, 0.9 - gradient / 2.0]);
 
         let next_index = (vertex_index + 2) % (vertex_count * 2);
         vec_push_range(&mut indices, vec![vertex_index, next_index, next_index + 1]);

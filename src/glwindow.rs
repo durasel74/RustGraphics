@@ -10,6 +10,7 @@ pub struct GLWindow {
     pub arrowv_event: i32,
     pub arrowh_event: i32,
     pub draw_mode: u32,
+    pub circles_mode: u32,
 }
 impl GLWindow {
     /// Создает новое окно с параметрами по умолчанию.
@@ -39,7 +40,7 @@ impl GLWindow {
             .gl_get_proc_address(s) as *const std::os::raw::c_void);
 
         GLWindow { window, event_pump, gl_context, 
-            arrowv_event: 0, arrowh_event: 0, draw_mode: 0 }
+            arrowv_event: 0, arrowh_event: 0, draw_mode: 0, circles_mode: 0 }
     }
 
     /// Обновляет окно.
@@ -84,6 +85,9 @@ impl GLWindow {
                 sdl2::event::Event::KeyDown { 
                     keycode: Some(sdl2::keyboard::Keycode::Right), repeat: true, ..} => { 
                         self.arrowh_event = 1 },
+                sdl2::event::Event::KeyUp { 
+                    keycode: Some(sdl2::keyboard::Keycode::M), ..} => { 
+                        self.circles_mode = (self.circles_mode == 0) as u32 },
                 
                 sdl2::event::Event::KeyUp {
                     keycode: Some(sdl2::keyboard::Keycode::Tab), ..} => { 
