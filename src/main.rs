@@ -37,22 +37,32 @@ fn main() {
         // gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
     }
 
-    let mut vertices_count: i32 = 6;
+    let mut radius = 55;
+    let mut vertices_count = 6;
+    let mut inner_radius = 20;
     
     // Цикл отрисовки
     let mut is_running = true;
     while is_running {
         is_running = gl_window.event_check();
 
-        vertices_count += gl_window.arrow_event;
+        vertices_count += gl_window.arrowv_event;
         if vertices_count < 0 { vertices_count = 0; }
-        gl_window.arrow_event = 0;
+        gl_window.arrowv_event = 0;
+
+        inner_radius += gl_window.arrowh_event;
+        if inner_radius < 0 { inner_radius = 0; }
+        if inner_radius > radius { inner_radius = radius; }
+        gl_window.arrowh_event = 0;
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(gl_window.draw_mode));
 
-            let figure: figures::Figure = figures::create_circle_gradient(vertices_count as u32, 55);
+            // let figure: figures::Figure = figures::create_circle(vertices_count as u32, 55);
+            let figure: figures::Figure = figures::create_thor(vertices_count as u32, 
+                radius as u32, inner_radius as u32);
+
             gl::BindVertexArray(figure.vao);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, figure.ebo);
 

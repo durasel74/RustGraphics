@@ -7,7 +7,8 @@ pub struct GLWindow {
     window: sdl2::video::Window,
     event_pump: sdl2::EventPump,
     gl_context: sdl2::video::GLContext,
-    pub arrow_event: i32,
+    pub arrowv_event: i32,
+    pub arrowh_event: i32,
     pub draw_mode: u32,
 }
 impl GLWindow {
@@ -38,7 +39,7 @@ impl GLWindow {
             .gl_get_proc_address(s) as *const std::os::raw::c_void);
 
         GLWindow { window, event_pump, gl_context, 
-            arrow_event: 0, draw_mode: 0 }
+            arrowv_event: 0, arrowh_event: 0, draw_mode: 0 }
     }
 
     /// Обновляет окно.
@@ -60,16 +61,29 @@ impl GLWindow {
 
                 sdl2::event::Event::KeyUp { 
                     keycode: Some(sdl2::keyboard::Keycode::Up), ..} => { 
-                        self.arrow_event = 1 },
+                        self.arrowv_event = 1 },
                 sdl2::event::Event::KeyDown { 
                     keycode: Some(sdl2::keyboard::Keycode::Up), repeat: true, ..} => { 
-                        self.arrow_event = 1 },
+                        self.arrowv_event = 1 },
                 sdl2::event::Event::KeyUp { 
                     keycode: Some(sdl2::keyboard::Keycode::Down), ..} => { 
-                        self.arrow_event = -1 },
+                        self.arrowv_event = -1 },
                 sdl2::event::Event::KeyDown { 
                     keycode: Some(sdl2::keyboard::Keycode::Down), repeat: true, ..} => { 
-                        self.arrow_event = -1 },
+                        self.arrowv_event = -1 },
+
+                sdl2::event::Event::KeyUp { 
+                    keycode: Some(sdl2::keyboard::Keycode::Left), ..} => { 
+                        self.arrowh_event = -1 },
+                sdl2::event::Event::KeyDown { 
+                    keycode: Some(sdl2::keyboard::Keycode::Left), repeat: true, ..} => { 
+                        self.arrowh_event = -1 },
+                sdl2::event::Event::KeyUp { 
+                    keycode: Some(sdl2::keyboard::Keycode::Right), ..} => { 
+                        self.arrowh_event = 1 },
+                sdl2::event::Event::KeyDown { 
+                    keycode: Some(sdl2::keyboard::Keycode::Right), repeat: true, ..} => { 
+                        self.arrowh_event = 1 },
                 
                 sdl2::event::Event::KeyUp {
                     keycode: Some(sdl2::keyboard::Keycode::Tab), ..} => { 
