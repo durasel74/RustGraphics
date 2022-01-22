@@ -5,6 +5,7 @@ authors = ["durasel74 <diman174cheb@mail.ru>"]
 edition = "2021"
 
 [dependencies]
+image = "0.23.14"
 gl = "0.14"
 
 [dependencies.sdl2]
