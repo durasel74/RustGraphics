@@ -20,13 +20,18 @@ impl Figure {
 
             gl::EnableVertexAttribArray(0);
             gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE,
-                (6 * std::mem::size_of::<f32>()) as GLint,
+                (8 * std::mem::size_of::<f32>()) as GLint,
                 std::ptr::null()
             );
             gl::EnableVertexAttribArray(1);
             gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE,
-                (6 * std::mem::size_of::<f32>()) as GLint,
+                (8 * std::mem::size_of::<f32>()) as GLint,
                 (3 * std::mem::size_of::<f32>()) as *const GLvoid,
+            );
+            gl::EnableVertexAttribArray(2); 
+            gl::VertexAttribPointer(2, 2, gl::FLOAT, gl::FALSE, 
+                (8 * std::mem::size_of::<f32>()) as GLint, 
+                (6 * std::mem::size_of::<f32>()) as *const GLvoid
             );
 
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -143,6 +148,27 @@ pub fn square() -> Figure {
             0.5, 0.5, 0.0,     0.9, 0.9, 0.9,
             0.5, -0.5, 0.0,    0.8, 0.8, 0.8,
             -0.5,  -0.5, 0.0,  0.9, 0.9, 0.9,
+        ],
+        indices: vec![
+            0, 1, 2,
+            2, 3, 0,
+        ],
+        vbo: 0,
+        vao: 0,
+        ebo: 0,
+    };
+    new_figure.create_vao();
+    new_figure.create_ebo();
+    return new_figure;
+}
+
+pub fn square_texture() -> Figure {
+    let mut new_figure = Figure {
+        vertices: vec![
+           -0.5,  0.5, 0.0,   1.0, 1.0, 1.0,   0.0, 1.0,
+            0.5,  0.5, 0.0,   0.9, 0.9, 0.9,   1.0, 1.0,
+            0.5, -0.5, 0.0,   0.8, 0.8, 0.8,   1.0, 0.0,
+           -0.5, -0.5, 0.0,   0.9, 0.9, 0.9,   0.0, 0.0,
         ],
         indices: vec![
             0, 1, 2,
