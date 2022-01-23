@@ -1,4 +1,5 @@
 use std::fs;
+use std::ffi;
 use gl;
 use gl::types::{ GLuint };
 use super::Shader;
@@ -91,6 +92,13 @@ impl ShaderProgram {
     /// Выполняет программу шейдера.
     pub fn run(&self) { 
         unsafe { gl::UseProgram(self.id); } 
+    }
+
+    pub fn set_uniform_int(&self, field_name: &str, value: i32) {
+        let cfield_name = ffi::CString::new(field_name).unwrap();
+        unsafe {
+            gl::Uniform1i(gl::GetUniformLocation(self.id(), cfield_name.as_ptr()), value);
+        }
     }
 }
 

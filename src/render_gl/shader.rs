@@ -12,7 +12,7 @@ pub struct Shader {
 impl Shader {
     /// Создает шейдер из строки с кодом. 
     /// Требуется указать тип шейдера для правильной компиляции.
-    pub fn from_source(source: &str, shader_type: GLenum) -> Result<Shader, ShaderError> {
+    pub fn from_source(source: &str, shader_type: GLenum) -> Result<Self, ShaderError> {
         let convert_result = ffi::CString::new(source);
         let csource = match convert_result {
             Ok(source) => source,

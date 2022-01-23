@@ -2,6 +2,7 @@ use std::io;
 use std::ffi;
 use std::fmt;
 use std::error;
+use image;
 
 pub fn create_string_buffer(len: usize) -> ffi::CString {
     let mut buffer: Vec<u8> = Vec::with_capacity(len + 1);
@@ -16,6 +17,7 @@ pub enum ShaderError {
     LinkError(String),
     FileError(io::Error),
     ConvertCStringError(ffi::NulError),
+    ImageOpenError(image::ImageError),
 }
 
 impl fmt::Display for ShaderError {
@@ -26,6 +28,7 @@ impl fmt::Display for ShaderError {
             ShaderError::LinkError(ref err) => write!(f, "Link error: {}", err),
             ShaderError::FileError(ref err) => write!(f, "File error: {}", err),
             ShaderError::ConvertCStringError(ref err) => write!(f, "Convert CString error: {}", err),
+            ShaderError::ImageOpenError(ref err) => write!(f, "Image open error: {}", err),
         }
     }
 }
@@ -38,6 +41,7 @@ impl error::Error for ShaderError {
             ShaderError::LinkError(_) => None,
             ShaderError::FileError(ref err) => Some(err),
             ShaderError::ConvertCStringError(ref err) => Some(err),
+            ShaderError::ImageOpenError(ref err) => Some(err),
         }
     }
 }

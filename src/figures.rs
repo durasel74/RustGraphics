@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::f32::consts::PI;
 use gl;
 use gl::types::{ GLint, GLuint, GLsizeiptr, GLvoid };
@@ -82,44 +84,6 @@ impl Drop for Figure {
             gl::DeleteVertexArrays(1, &self.vao);
          }
     }
-}
-
-pub fn triangle90() -> Figure {
-    let mut new_figure = Figure {
-        vertices: vec![
-            -0.55, 0.45, 0.0,   0.8, 0.2, 0.8,
-            0.45, -0.55, 0.0,   0.8, 0.2, 1.0,
-            -0.55, -0.55, 0.0,  0.9, 0.2, 0.8,
-        ],
-        indices: vec![
-            0, 1, 2,
-        ],
-        vbo: 0,
-        vao: 0,
-        ebo: 0,
-    };
-    new_figure.create_vao();
-    new_figure.create_ebo();
-    return new_figure;
-}
-
-pub fn triangle90alter() -> Figure {
-    let mut new_figure = Figure {
-        vertices: vec![
-            -0.45, 0.55, 0.0,  0.2, 0.8, 0.8,
-            0.55, 0.55, 0.0,   0.2, 1.0, 0.8,
-            0.55, -0.45, 0.0,  0.2, 0.9, 0.8,
-        ],
-        indices: vec![
-            0, 1, 2,
-        ],
-        vbo: 0,
-        vao: 0,
-        ebo: 0,
-    };
-    new_figure.create_vao();
-    new_figure.create_ebo();
-    return new_figure;
 }
 
 pub fn triangle() -> Figure {
