@@ -2,6 +2,8 @@ mod render_gl;
 mod figures;
 mod glwindow;
 
+use std::time;
+use cgmath::{ Matrix, Matrix4, Rad };
 use gl;
 
 fn main() {
@@ -50,6 +52,12 @@ fn main() {
         gl::PointSize(3.0);
     }
 
+    
+    let now = time::Instant::now();
+    let mut rotate_matrix = Matrix4::from_angle_z(Rad(0.0));
+    let mut scale_matrix = Matrix4::from_scale(1.0);
+
+
     // Цикл отрисовки
     let mut is_running = true;
     while is_running {
@@ -65,9 +73,21 @@ fn main() {
             gl::ActiveTexture(gl::TEXTURE1);
             gl::BindTexture(gl::TEXTURE_2D, texture2.id());
 
-            if gl_window.draw_mode != 0 { shader_wire_program.run(); }
+            
+            let elapsed_time = now.elapsed();
+            if ((elapsed_time.as_millis() as f32) / 500.0) == 0.0 { rotate_matrix = Matrix4::from_angle_z(Rad(0.1)) }
+            let scale_value = ((elapsed_time.as_millis() as f32) / 500.0).sin().abs() + 0.2;
+            scale_matrix = Matrix4::from_scale(scale_value);
+            let matrix = &rotate_matrix * &scale_matrix;
+
+
+            if gl_window.draw_mode != 0 { 
+                shader_wire_program.run(); 
+                shader_wire_program.set_uniform_matrix("transform", &matrix);
+            }
             else {
                 shader_program.run();
+                shader_program.set_uniform_matrix("transform", &matrix);
                 shader_program.set_uniform_int("texture1", 0);
                 shader_program.set_uniform_int("texture2", 1);
             }
