@@ -107,7 +107,7 @@ impl ShaderProgram {
         let cfield_name = ffi::CString::new(field_name).unwrap();
         unsafe {
             let location = gl::GetUniformLocation(self.id(), cfield_name.as_ptr());
-            gl::UniformMatrix4fv(location, 1, gl::TRUE, value.as_ptr());
+            gl::UniformMatrix4fv(location, 1, gl::FALSE, value.as_ptr());
         }
     }
 }

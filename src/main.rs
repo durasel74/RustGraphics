@@ -3,7 +3,7 @@ mod figures;
 mod glwindow;
 
 use std::time;
-use cgmath::{ Matrix, Matrix4, Rad };
+use cgmath::{ Matrix, Matrix4, vec3, Rad };
 use gl;
 
 fn main() {
@@ -54,8 +54,9 @@ fn main() {
 
     
     let now = time::Instant::now();
-    let mut rotate_matrix = Matrix4::from_angle_z(Rad(0.0));
     let mut scale_matrix = Matrix4::from_scale(1.0);
+    let mut rotate_matrix = Matrix4::from_angle_z(Rad(0.0));
+    let mut translation_matrix = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
 
 
     // Цикл отрисовки
@@ -75,10 +76,13 @@ fn main() {
 
             
             let elapsed_time = now.elapsed();
-            if ((elapsed_time.as_millis() as f32) / 500.0) == 0.0 { rotate_matrix = Matrix4::from_angle_z(Rad(0.1)) }
             let scale_value = ((elapsed_time.as_millis() as f32) / 500.0).sin().abs() + 0.2;
             scale_matrix = Matrix4::from_scale(scale_value);
-            let matrix = &rotate_matrix * &scale_matrix;
+            let rotate_value = (elapsed_time.as_millis() as f32) / 700.0;
+            rotate_matrix = Matrix4::from_angle_z(Rad(rotate_value));
+            let translation_value = ((elapsed_time.as_millis() as f32) / 900.0).sin() / 2.0;
+            translation_matrix = Matrix4::from_translation(vec3(translation_value, 0.0, 0.0));
+            let matrix = &translation_matrix * &rotate_matrix * &scale_matrix;
 
 
             if gl_window.draw_mode != 0 { 
