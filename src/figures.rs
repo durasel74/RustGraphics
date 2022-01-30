@@ -147,6 +147,47 @@ pub fn square_texture() -> Figure {
     return new_figure;
 }
 
+pub fn cube_texture() -> Figure {
+    let mut new_figure = Figure {
+        vertices: vec![
+           -0.5,  0.5, 0.5,   1.0, 1.0, 1.0,   0.0, 1.0,
+            0.5,  0.5, 0.5,   0.9, 0.9, 0.9,   1.0, 1.0,
+            0.5, -0.5, 0.5,   0.8, 0.8, 0.8,   1.0, 0.0,
+           -0.5, -0.5, 0.5,   0.9, 0.9, 0.9,   0.0, 0.0,
+
+           -0.5,  0.5, -0.5,   0.9, 0.9, 0.9,   0.0, 1.0,
+            0.5,  0.5, -0.5,   0.8, 0.8, 0.8,   1.0, 1.0,
+            0.5, -0.5, -0.5,   0.7, 0.7, 0.7,   1.0, 0.0,
+           -0.5, -0.5, -0.5,   0.8, 0.8, 0.8,   0.0, 0.0,
+        ],
+        indices: vec![
+            0, 1, 2,
+            2, 3, 0,
+
+            0, 4, 3,
+            3, 7, 4,
+
+            4, 5, 6,
+            6, 7, 4,
+
+            5, 1, 2,
+            2, 5, 6,
+
+            3, 2, 7,
+            7, 2, 6,
+
+            0, 4, 5,
+            5, 1, 0,
+        ],
+        vbo: 0,
+        vao: 0,
+        ebo: 0,
+    };
+    new_figure.create_vao();
+    new_figure.create_ebo();
+    return new_figure;
+}
+
 pub fn create_circle(vertex_count: u32, radius: u32) -> Figure {
     let normal_radius = (radius as f32) / 100.0;
     let mut x: f32 = 0.0;

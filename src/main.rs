@@ -3,15 +3,19 @@ mod figures;
 mod glwindow;
 
 use std::time;
-use cgmath::{ Matrix, Matrix4, vec3, Rad };
+use cgmath::{ Rad, Matrix, Matrix4, vec3, PerspectiveFov };
 use gl;
 
 fn main() {
+    let window_width = 800.0;
+    let window_height = 700.0;
+
     // Запуск окна
-    let mut gl_window = glwindow::GLWindow::from_parameters("RustGraphics", 800, 700);
+    let mut gl_window = glwindow::GLWindow::from_parameters("RustGraphics", 
+        window_width as u32, window_height as u32);
 
     // Загрузка модели
-    let figure: figures::Figure = figures::square_texture();
+    let figure: figures::Figure = figures::cube_texture();
 
     // Загрузка текстур
     let texture_loadresult = render_gl::Texture::from_file("Pictures\\container.jpg");
@@ -50,21 +54,46 @@ fn main() {
     unsafe { 
         gl::ClearColor(0.2, 0.2, 0.2, 1.0);
         gl::PointSize(3.0);
+        gl::Enable(gl::DEPTH_TEST);  
     }
 
-    
+
+
     let now = time::Instant::now();
-    let mut scale_matrix = Matrix4::from_scale(1.0);
-    let mut rotate_matrix = Matrix4::from_angle_z(Rad(0.0));
-    let mut translation_matrix = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
 
+    let field_of_view = 45.0f32;
 
+    let mut model_matrix = Matrix4::from_translation(vec3(0.0, 0.0, 0.0));
+
+    let mut view_matrix = Matrix4::from_translation(vec3(0.0, 0.0, -3.0));
+
+    let projection_matrix = Matrix4::from(PerspectiveFov { 
+        fovy: Rad(field_of_view.to_radians()),
+        aspect: window_width / window_height, 
+        near: 0.1,
+        far: 100.0
+    });
+
+    let cube_positions = vec![ 
+        vec3( 0.0,  0.0,  0.0),
+        vec3( 2.0,  5.0, -15.0),
+        vec3(-1.5, -2.2, -2.5),
+        vec3(-3.8, -2.0, 12.3),
+        vec3( 2.4, -0.4, -3.5),
+        vec3(-1.7,  3.0, -7.5),
+        vec3( 1.3, -2.0, 2.5),
+        vec3( 1.5,  2.0, -2.5),
+        vec3( 1.5,  0.2, 1.5),
+        vec3(-1.3,  0.0, -1.5),
+    ];
+
+    
     // Цикл отрисовки
     let mut is_running = true;
     while is_running {
         is_running = gl_window.event_check();
         unsafe {
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(gl_window.draw_mode));
 
             gl::BindVertexArray(figure.vao);
@@ -74,30 +103,35 @@ fn main() {
             gl::ActiveTexture(gl::TEXTURE1);
             gl::BindTexture(gl::TEXTURE_2D, texture2.id());
 
-            
             let elapsed_time = now.elapsed();
-            let scale_value = ((elapsed_time.as_millis() as f32) / 500.0).sin().abs() + 0.2;
-            scale_matrix = Matrix4::from_scale(scale_value);
-            let rotate_value = (elapsed_time.as_millis() as f32) / 700.0;
-            rotate_matrix = Matrix4::from_angle_z(Rad(rotate_value));
-            let translation_value = ((elapsed_time.as_millis() as f32) / 900.0).sin() / 2.0;
-            translation_matrix = Matrix4::from_translation(vec3(translation_value, 0.0, 0.0));
-            let matrix = &translation_matrix * &rotate_matrix * &scale_matrix;
+            let rotate_value = (elapsed_time.as_millis() as f32) / 999.0;
+            view_matrix = Matrix4::from_translation(vec3(0.0, 0.0, -6.0)) * Matrix4::from_angle_y(Rad(-rotate_value));
 
+            for i in 0..10 {
+                model_matrix = Matrix4::from_translation(cube_positions[i].clone());
+                let angle = 20.0 * i as f32;
+                model_matrix = model_matrix * Matrix4::from_axis_angle(
+                    vec3(1.0, 0.3, 0.5), Rad(angle.to_radians()));
 
-            if gl_window.draw_mode != 0 { 
+                if gl_window.draw_mode != 0 { 
                 shader_wire_program.run(); 
-                shader_wire_program.set_uniform_matrix("transform", &matrix);
-            }
-            else {
-                shader_program.run();
-                shader_program.set_uniform_matrix("transform", &matrix);
-                shader_program.set_uniform_int("texture1", 0);
-                shader_program.set_uniform_int("texture2", 1);
-            }
+                shader_wire_program.set_uniform_matrix("model", &model_matrix);
+                shader_wire_program.set_uniform_matrix("view", &view_matrix);
+                shader_wire_program.set_uniform_matrix("projection", &projection_matrix);
+                }
+                else {
+                    shader_program.run();
+                    shader_program.set_uniform_matrix("model", &model_matrix);
+                    shader_program.set_uniform_matrix("view", &view_matrix);
+                    shader_program.set_uniform_matrix("projection", &projection_matrix);
 
-            gl::DrawElements(gl::TRIANGLES, figure.indices.len() as i32,
-                gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
+                    shader_program.set_uniform_int("texture1", 0);
+                    shader_program.set_uniform_int("texture2", 1);
+                }
+
+                gl::DrawElements(gl::TRIANGLES, figure.indices.len() as i32,
+                    gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
+            }
         }
         gl_window.update();
     }
