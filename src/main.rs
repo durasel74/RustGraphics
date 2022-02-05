@@ -1,10 +1,11 @@
 mod render_gl;
-mod figures;
 mod glwindow;
 
 use std::time;
 use cgmath::{ Rad, Matrix, Matrix4, vec3, PerspectiveFov };
 use gl;
+use render_gl::Mesh;
+use render_gl::figures;
 
 fn main() {
     let window_width = 800.0;
@@ -15,7 +16,7 @@ fn main() {
         window_width as u32, window_height as u32);
 
     // Загрузка модели
-    let figure: figures::Figure = figures::cube_texture();
+    let mesh: Mesh = figures::cube();
 
     // Загрузка текстур
     let texture_loadresult = render_gl::Texture::from_file("Pictures\\container.jpg");
@@ -52,7 +53,7 @@ fn main() {
 
     // Первоначальная настройка пайплайна
     unsafe { 
-        gl::ClearColor(0.2, 0.2, 0.2, 1.0);
+        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);  
     }
@@ -96,8 +97,8 @@ fn main() {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(gl_window.draw_mode));
 
-            gl::BindVertexArray(figure.vao);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, figure.ebo);
+            gl::BindVertexArray(mesh.render_data().vao);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, texture1.id());
             gl::ActiveTexture(gl::TEXTURE1);
@@ -114,10 +115,10 @@ fn main() {
                     vec3(1.0, 0.3, 0.5), Rad(angle.to_radians()));
 
                 if gl_window.draw_mode != 0 { 
-                shader_wire_program.run(); 
-                shader_wire_program.set_uniform_matrix("model", &model_matrix);
-                shader_wire_program.set_uniform_matrix("view", &view_matrix);
-                shader_wire_program.set_uniform_matrix("projection", &projection_matrix);
+                    shader_wire_program.run(); 
+                    shader_wire_program.set_uniform_matrix("model", &model_matrix);
+                    shader_wire_program.set_uniform_matrix("view", &view_matrix);
+                    shader_wire_program.set_uniform_matrix("projection", &projection_matrix);
                 }
                 else {
                     shader_program.run();
@@ -128,9 +129,8 @@ fn main() {
                     shader_program.set_uniform_int("texture1", 0);
                     shader_program.set_uniform_int("texture2", 1);
                 }
-
-                gl::DrawElements(gl::TRIANGLES, figure.indices.len() as i32,
-                    gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
+                gl::DrawElements(gl::TRIANGLES, mesh.indices().len() as i32,
+                    gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
             }
         }
         gl_window.update();
