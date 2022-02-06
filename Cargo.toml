@@ -5,6 +5,7 @@ authors = ["durasel74 <diman174cheb@mail.ru>"]
 edition = "2021"
 
 [dependencies]
+rand = "0.8.4"
 cgmath = "0.18.0"
 image = "0.23.14"
 gl = "0.14"
