@@ -42,12 +42,10 @@ impl GLWindow {
         let gl_context = window.gl_create_context().unwrap();
         gl::load_with(|s| video_subsystem
             .gl_get_proc_address(s) as *const std::os::raw::c_void);
-        // sdl_context.mouse().warp_mouse_in_window(&window, (window.size().0 / 2) as i32, 
-        //     (window.size().1 / 2) as i32);
-        sdl_context.mouse().show_cursor(true);
+        //sdl_context.mouse().show_cursor(true);
 
-        GLWindow { sdl_context, window, event_pump, gl_context, 
-            fullscreen_mode: false, draw_mode: 0, arrow_h: 0, arrow_v: 0, 
+        GLWindow { sdl_context, window, event_pump, gl_context,
+            fullscreen_mode: false, draw_mode: 0, arrow_h: 0, arrow_v: 0,
             delta_x: 400.0, delta_y: 350.0 }
     }
 
@@ -102,8 +100,8 @@ impl GLWindow {
                     let win_height = self.window.size().1 as f32 / 2.0;
                     self.delta_x = x as f32 - win_width;
                     self.delta_y = y as f32 - win_height;
-                    self.sdl_context.mouse().warp_mouse_in_window(&self.window, 
-                        win_width as i32, win_height as i32);
+                    // self.sdl_context.mouse().warp_mouse_in_window(&self.window, 
+                    //     win_width as i32, win_height as i32);
                 },
                 _ => (),
             }
