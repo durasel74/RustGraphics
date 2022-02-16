@@ -2,21 +2,21 @@ use cgmath::{ Matrix4, Vector3, vec3, Rad };
 use gl;
 use super::Mesh;
 
-pub struct RenderObject<'a> {
-    mesh: &'a Mesh,
+pub struct RenderObject {
+    mesh: Mesh,
     position: Vector3<f32>,
     rotation: Vector3<f32>,
     scale: f32,
 }
-impl<'a> RenderObject<'a> {
-    pub fn from_mesh(mesh: &'a Mesh) -> Self {
+impl RenderObject {
+    pub fn from_mesh(mesh: Mesh) -> Self {
         let position = vec3(0.0, 0.0, 0.0);
         let rotation = vec3(0.0, 0.0, 0.0);
         let scale = 1.0;
         RenderObject { mesh, position, rotation, scale }
     }
 
-    pub fn mesh(&self) -> &Mesh { self.mesh }
+    pub fn mesh(&self) -> &Mesh { &self.mesh }
     pub fn position(&self) -> Vector3<f32> { self.position }
     pub fn set_position(&mut self, value: Vector3<f32>) { self.position = value }
     pub fn rotation(&self) -> Vector3<f32> { self.rotation }
