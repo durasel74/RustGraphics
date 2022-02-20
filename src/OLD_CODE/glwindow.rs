@@ -82,6 +82,7 @@
 //                             self.fullscreen_mode = false;
 //                         }
 //                     },
+
 //                 Event::KeyDown {
 //                     keycode: Some(sdl2::keyboard::Keycode::W), ..} =>
 //                         self.arrow_v += 1,

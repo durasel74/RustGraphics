@@ -10,7 +10,7 @@ impl Camera {
     pub fn new() -> Self {
         let position = vec3(0.0, 0.0, 0.0);
         let target = vec3(0.0, 0.0, 0.0);
-        let direction = vec3(0.0, 0.0, 0.0);
+        let direction = vec3(0.0, 0.0, 1.0);
         Camera { position, target, direction }
     }
 

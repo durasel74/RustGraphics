@@ -1,6 +1,7 @@
 mod render_objects;
 
 use gl;
+use std::ffi;
 
 use std::time;
 use rand::Rng;
@@ -13,6 +14,7 @@ use glutin::window;
 use glutin::event;
 use glutin::event_loop;
 use glutin::dpi;
+use glutin::monitor;
 
 fn main() {
     let event_loop = event_loop::EventLoop::new();
@@ -29,16 +31,6 @@ fn main() {
 
     let gl_context = windowed_context.context();
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
-
-    // let version = unsafe {
-    //     let data = ffi::CStr::from_ptr(gl::GetString(gl::VERSION) as *const _).to_bytes().to_vec();
-    //     String::from_utf8(data).unwrap()
-    // };
-    // println!("OpenGL version {}", version);
-
-    // Self::set_event_handler(event_loop);
-
-
 
     // Загрузка модели
     let mesh: Mesh = figures::cube();
@@ -62,6 +54,9 @@ fn main() {
         Err(err) => { println!("{}", err); return }
     };
 
+    let mut projection_matrix: Matrix4<f32> = Matrix4::from_scale(1.0);
+    let mut camera = Camera::new();
+    camera.set_position(vec3(0.0, 0.0, 1.0));
 
     let mut render_objects: Vec<RenderObject> = vec![];
     let mut rng = rand::thread_rng();
@@ -74,45 +69,97 @@ fn main() {
     }
     let mesh: Mesh = figures::cube();
     render_objects.push(RenderObject::from_mesh(mesh));
-
-    let mut projection_matrix: Matrix4<f32> = Matrix4::from_scale(1.0);
-    let mut camera = Camera::new();
-    camera.set_position(vec3(0.0, 0.0, 3.0));
-    
-    let field_of_view = 70.0f32;
-    let speed = 0.5;
-    let sensitivity = 0.1;
-
-    let mut yaw = 0.0f32;
-    let mut pitch = 0.0f32;
-    let mut last_x = 0.0;
-    let mut last_y = 0.0;
-
-    let now = time::Instant::now();
     
     // Первоначальная настройка пайплайна
     unsafe { 
         gl::ClearColor(0.0, 0.0, 0.0, 1.0);
         gl::PointSize(3.0);
-        gl::Enable(gl::DEPTH_TEST);  
+        gl::Enable(gl::DEPTH_TEST);
     }
 
+    let fullscreen = window::Fullscreen::Exclusive(prompt_for_video_mode(
+        &prompt_for_monitor(&event_loop)));
+    
+        
+    let mut is_fullscreen = false;
     let mut draw_mode = 0;
+    let field_of_view = 70.0f32;
+    let mut speed = 0.5;
+    let sensitivity = 1.0;
+    
+    let mut arrow_h = 0i8;
+    let mut arrow_v = 0i8;
 
+    let mut yaw = 0.0f32;
+    let mut pitch = 0.0f32;
+    let mut last_x = 0.0;
+    let mut last_y = 0.0;
+    let mut delta_x = 0.0;
+    let mut delta_y = 0.0;
+    
+    let now = time::Instant::now();
+    let radius = 10.0;
 
+    windowed_context.window().set_cursor_grab(true).unwrap();
+    windowed_context.window().set_cursor_visible(false);
     
     event_loop.run(move |event, _, control_flow| {
-        *control_flow = event_loop::ControlFlow::Wait;
+        *control_flow = event_loop::ControlFlow::Poll;
 
         match event {
             event::Event::LoopDestroyed => return,
             event::Event::WindowEvent { event, .. } =>
                 window_event_handler(event, control_flow),
+            event::Event::DeviceEvent { event, .. } => {
+                match event {
+                    event::DeviceEvent::Key(keyboard_input) => match keyboard_input {
+                        event::KeyboardInput { scancode: 1, state: event::ElementState::Released, .. } => 
+                            *control_flow = event_loop::ControlFlow::Exit,
+                        event::KeyboardInput { scancode: 15, state: event::ElementState::Released, .. } => 
+                            draw_mode = (draw_mode + 1) % 3,
+                        event::KeyboardInput { scancode: 28, state: event::ElementState::Released, .. } => 
+                        {
+                            if !is_fullscreen {
+                                windowed_context.window().set_fullscreen(Some(fullscreen.clone()));
+                                is_fullscreen = true;
+                            }
+                            else {
+                                windowed_context.window().set_fullscreen(None);
+                                is_fullscreen = false;
+                            }
+                        },
+
+                        event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
+                            arrow_v += 1,
+                        event::KeyboardInput { scancode: 31, state: event::ElementState::Pressed, ..} =>
+                            arrow_v += -1,
+                        event::KeyboardInput { scancode: 30, state: event::ElementState::Pressed, ..} =>
+                            arrow_h += -1,
+                        event::KeyboardInput { scancode: 32, state: event::ElementState::Pressed, ..} =>
+                            arrow_h += 1,
+                        //event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
+                        _ => ()
+                    },
+
+                    event::DeviceEvent::MouseMotion { delta } => 
+                    {
+                        delta_x = delta.0;
+                        delta_y = delta.1;
+                        //println!("{} {}", delta_x, delta_y);
+                    },
+                    _ => ()
+                }
+            }
             event::Event::MainEventsCleared => {
                 unsafe {
                     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                 }
+
+                // gl::BindVertexArray(self.mesh.render_data().vao);
+                // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.mesh.render_data().ebo);
+                // gl::ActiveTexture(gl::TEXTURE0);
+                // gl::BindTexture(gl::TEXTURE_2D, texture1.id());
 
                 let aspect_width = windowed_context.window().inner_size().width as f32;
                 let mut aspect_height = windowed_context.window().inner_size().height as f32;
@@ -120,79 +167,75 @@ fn main() {
                 if aspect_height == 0.0 { aspect_height = 1.0 }
                 if aspect_height > aspect_width { aspect = aspect_height / aspect_width }
                 else { aspect = aspect_width / aspect_height }
+
+                // Перспективная проекция
                 projection_matrix = Matrix4::from(PerspectiveFov { 
                     fovy: Rad(field_of_view.to_radians()),
                     aspect, 
                     near: 0.1,
-                    far: 200.0
+                    far: 300.0
                 });
 
+                // Ортографическая проекция
                 // projection_matrix = Matrix4::from(Ortho {
-                //     left: -aspect_width / 5.0,
-                //     right: aspect_width / 5.0,
-                //     bottom: -aspect_height / 5.0,
-                //     top: aspect_height / 5.0,
-                //     near: 0.1,
-                //     far: 200.0,
+                //     left: -aspect_width / 6.0,
+                //     right: aspect_width / 6.0,
+                //     bottom: -aspect_height / 6.0,
+                //     top: aspect_height / 6.0,
+                //     near: -300.0,
+                //     far: 300.0,
                 // });
 
-                // gl::BindVertexArray(self.mesh.render_data().vao);
-                // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.mesh.render_data().ebo);
-                // gl::ActiveTexture(gl::TEXTURE0);
-                // gl::BindTexture(gl::TEXTURE_2D, texture1.id());
-
+                // Вращение по кругу
                 // let elapsed_time = now.elapsed();
                 // let rotate_value = (elapsed_time.as_millis() as f32) / 999.0;
-                
                 // let camx = rotate_value.sin() * radius;
                 // let camy = rotate_value.cos() * radius;
                 // camera.set_position(vec3(camx, 0.0, camy));
 
+                let offset_x = delta_x * sensitivity;
+                let offset_y = delta_y * sensitivity;
+                delta_x = 0.0;
+                delta_y = 0.0;
 
-
-                // let mut offset_x = gl_window.delta_x * sensitivity;
-                // let mut offset_y = gl_window.delta_y * sensitivity;
-                // // last_x = gl_window.delta_x as f32;
-                // // last_y = gl_window.delta_y as f32;
-
-                // yaw += offset_x;
-                // pitch += offset_y;
-                // if (pitch > 89.0) { pitch = 89.0; }
-                // if (pitch < -89.0) { pitch = -89.0; }
+                yaw += offset_x as f32;
+                pitch += offset_y as f32;
+                if (pitch > 89.0) { pitch = 89.0; }
+                if (pitch < -89.0) { pitch = -89.0; }
 
                 let radians_yaw = yaw.to_radians();
                 let radians_pitch = pitch.to_radians();
-                let direct_x = (radians_yaw * radians_pitch.cos()).cos();
+                let direct_x = radians_yaw.cos() * radians_pitch.cos();
                 let direct_y = radians_pitch.sin();
-                let direct_z = (radians_yaw * radians_pitch.cos()).sin();
+                let direct_z = radians_yaw.sin() * radians_pitch.cos();
                 let direction = vec3(direct_x, direct_y, direct_z).normalize();
                 camera.set_direction(direction);
 
+                if arrow_h > 0 {
+                    let matrix = Matrix4::from_translation(camera.right() * speed);
+                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                    arrow_h = 0;
+                }
+                else if arrow_h < 0 {
+                    let matrix = Matrix4::from_translation(-camera.right() * speed);
+                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                    arrow_h = 0;
+                }
+                if arrow_v > 0 {
+                    let matrix = Matrix4::from_translation(-camera.direction() * speed);
+                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                    arrow_v = 0;
+                }
+                else if arrow_v < 0 {
+                    let matrix = Matrix4::from_translation(camera.direction() * speed);
+                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                    arrow_v = 0;
+                }
 
-                // if window.arrow_h > 0 {
-                //     let matrix = Matrix4::from_translation(camera.right() * speed);
-                //     camera.set_target((matrix * camera.target().extend(1.0)).truncate());
-                //     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                //     window.arrow_h = 0;
-                // }
-                // else if window.arrow_h < 0 {
-                //     let matrix = Matrix4::from_translation(-camera.right() * speed);
-                //     camera.set_target((matrix * camera.target().extend(1.0)).truncate());
-                //     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                //     window.arrow_h = 0;
-                // }
-                // if window.arrow_v > 0 {
-                //     let matrix = Matrix4::from_translation(-camera.direction() * speed);
-                //     camera.set_target((matrix * camera.target().extend(1.0)).truncate());
-                //     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                //     window.arrow_v = 0;
-                // }
-                // else if window.arrow_v < 0 {
-                //     let matrix = Matrix4::from_translation(camera.direction() * speed);
-                //     camera.set_target((matrix * camera.target().extend(1.0)).truncate());
-                //     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                //     window.arrow_v = 0;
-                // }
 
                 for i in 0..render_objects.len() {
                     let current_object = &render_objects[i];
@@ -237,4 +280,12 @@ fn to_draw_mode(value: u32) -> gl::types::GLenum {
         2 => gl::POINT,
         _ => gl::FILL
     }
+}
+
+fn prompt_for_monitor(event_loop: &event_loop::EventLoop<()>) -> monitor::MonitorHandle {
+    event_loop.available_monitors().nth(0).unwrap()
+}
+
+fn prompt_for_video_mode(monitor: &monitor::MonitorHandle) -> monitor::VideoMode {
+    monitor.video_modes().nth(0).unwrap()
 }
