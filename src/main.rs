@@ -7,7 +7,7 @@ use std::time;
 use rand::Rng;
 use cgmath::prelude::InnerSpace;
 use cgmath::{ Rad, Matrix, Matrix4, Vector3, vec3, PerspectiveFov, Ortho };
-use render_objects::{ Mesh, RenderObject, Camera, figures };
+use render_objects::{ Mesh, RenderObject, Camera, Texture, figures };
 
 use glutin;
 use glutin::window;
@@ -17,6 +17,7 @@ use glutin::dpi;
 use glutin::monitor;
 
 fn main() {
+    // Создание окна
     let event_loop = event_loop::EventLoop::new();
     let window_builder = window::WindowBuilder::new()
         .with_visible(true)
@@ -29,18 +30,19 @@ fn main() {
         .unwrap();
     let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
+    // Создание контекста OpenGl
     let gl_context = windowed_context.context();
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    let mesh: Mesh = figures::cube();
+    let mesh: Mesh = figures::square();
 
     // Загрузка текстур
-    // let texture_loadresult = render_gl::Texture::from_file("Pictures\\container.jpg");
-    // let texture1 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
+    let texture_loadresult = Texture::from_file("Pictures\\Rushia.jpg");
+    let texture1 = match texture_loadresult {
+        Ok(texture) => texture,
+        Err(err) => { println!("{}", err); return }
+    };
 
     // Пути к файлам шейдеров
     let vert_filename = "Shaders\\triangles.vert";
@@ -62,13 +64,11 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
     for i in 1..1000 {
-        let mesh: Mesh = figures::cube();
-        let mut new_object = RenderObject::from_mesh(mesh);
+        let mut new_object = RenderObject::from_mesh(mesh.clone());
         new_object.set_position(vec3(generator(), generator(), generator()));
         render_objects.push(new_object);
     }
-    let mesh: Mesh = figures::cube();
-    render_objects.push(RenderObject::from_mesh(mesh));
+    render_objects.push(RenderObject::from_mesh(mesh.clone()));
     
     // Первоначальная настройка пайплайна
     unsafe { 
@@ -154,12 +154,13 @@ fn main() {
                 unsafe {
                     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
+
+                    gl::ActiveTexture(gl::TEXTURE0);
+                    gl::BindTexture(gl::TEXTURE_2D, texture1.id());
                 }
 
-                // gl::BindVertexArray(self.mesh.render_data().vao);
-                // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.mesh.render_data().ebo);
-                // gl::ActiveTexture(gl::TEXTURE0);
-                // gl::BindTexture(gl::TEXTURE_2D, texture1.id());
+                // gl::BindVertexArray(mesh.render_data().vao);
+                // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
 
                 let aspect_width = windowed_context.window().inner_size().width as f32;
                 let mut aspect_height = windowed_context.window().inner_size().height as f32;
@@ -245,7 +246,7 @@ fn main() {
                     shader_program.set_uniform_matrix("model", &current_object.transform_matrix());
                     shader_program.set_uniform_matrix("view", &camera.lookat_matrix());
                     shader_program.set_uniform_matrix("projection", &projection_matrix);
-                    // shader_program.set_uniform_int("texture1", 0);
+                    shader_program.set_uniform_int("texture1", 0);
 
                     if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                     else { shader_program.set_uniform_int("wire_mode", 1); }

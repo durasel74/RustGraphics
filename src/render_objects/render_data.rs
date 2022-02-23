@@ -1,6 +1,7 @@
 use gl;
 use gl::types::{ GLint, GLuint, GLsizeiptr, GLvoid };
 
+#[derive(Clone)]
 pub struct RenderData {
     pub vbo: GLuint,
     pub vao: GLuint,

@@ -11,8 +11,8 @@ void main()
 {
     if (wire_mode == 0)
     {
-        resultColor = vec4(outColor, 1.0f);
-        // resultColor = texture(texture2, outTex);
+        // resultColor = vec4(outColor, 1.0f);
+        resultColor = texture(texture1, outTex);
         // resultColor = texture(texture1, outTex) * texture(texture2, outTex);
         // resultColor = mix(texture(texture1, outTex), texture(texture2, outTex), 0.3);
     }

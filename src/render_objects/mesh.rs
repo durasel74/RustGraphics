@@ -1,5 +1,6 @@
 use super::RenderData;
 
+#[derive(Clone)]
 pub struct Mesh {
     vertices: Vec<f32>,
     indices: Vec<u16>,
