@@ -35,10 +35,10 @@ fn main() {
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    let mesh: Mesh = figures::square();
+    let mesh: Mesh = figures::tetrahedron();
 
     // Загрузка текстур
-    let texture_loadresult = Texture::from_file("Pictures\\Rushia.jpg");
+    let texture_loadresult = Texture::from_file("Pictures\\Rushia2.jpg");
     let texture1 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
@@ -98,7 +98,7 @@ fn main() {
     let mut delta_y = 0.0;
     
     let now = time::Instant::now();
-    let radius = 10.0;
+    let radius = 4.0;
 
     windowed_context.window().set_cursor_grab(true).unwrap();
     windowed_context.window().set_cursor_visible(false);
