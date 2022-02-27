@@ -29,13 +29,18 @@ fn main() {
         .build_windowed(window_builder, &event_loop)
         .unwrap();
     let windowed_context = unsafe { windowed_context.make_current().unwrap() };
+    windowed_context.window().set_cursor_grab(true).unwrap();
+    windowed_context.window().set_cursor_visible(false);
+
+    let fullscreen = window::Fullscreen::Exclusive(prompt_for_video_mode(
+        &prompt_for_monitor(&event_loop)));
 
     // Создание контекста OpenGl
     let gl_context = windowed_context.context();
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    let mesh: Mesh = figures::tetrahedron();
+    let mesh: Mesh = figures::cube();
 
     // Загрузка текстур
     let texture_loadresult = Texture::from_file("Pictures\\Rushia2.jpg");
@@ -56,8 +61,9 @@ fn main() {
         Err(err) => { println!("{}", err); return }
     };
 
-    let mut projection_matrix: Matrix4<f32> = Matrix4::from_scale(1.0);
     let mut camera = Camera::new();
+    camera.set_is_look_at(false);
+    camera.set_is_ortho(false);
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
     let mut render_objects: Vec<RenderObject> = vec![];
@@ -77,13 +83,8 @@ fn main() {
         gl::Enable(gl::DEPTH_TEST);
     }
 
-    let fullscreen = window::Fullscreen::Exclusive(prompt_for_video_mode(
-        &prompt_for_monitor(&event_loop)));
-    
-        
     let mut is_fullscreen = false;
     let mut draw_mode = 0;
-    let field_of_view = 70.0f32;
     let mut speed = 0.5;
     let sensitivity = 1.0;
     
@@ -98,10 +99,7 @@ fn main() {
     let mut delta_y = 0.0;
     
     let now = time::Instant::now();
-    let radius = 4.0;
-
-    windowed_context.window().set_cursor_grab(true).unwrap();
-    windowed_context.window().set_cursor_visible(false);
+    //let radius = 4.0;
     
     event_loop.run(move |event, _, control_flow| {
         *control_flow = event_loop::ControlFlow::Poll;
@@ -128,6 +126,11 @@ fn main() {
                                 is_fullscreen = false;
                             }
                         },
+                        event::KeyboardInput { scancode: 25, state: event::ElementState::Released, ..} =>
+                        {
+                            if camera.is_ortho() { camera.set_is_ortho(false); }
+                            else { camera.set_is_ortho(true); }
+                        },
 
                         event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
                             arrow_v += 1,
@@ -147,6 +150,11 @@ fn main() {
                         delta_y = delta.1;
                         //println!("{} {}", delta_x, delta_y);
                     },
+                    event::DeviceEvent::MouseWheel { delta } => match delta {
+                        event::MouseScrollDelta::LineDelta(_, y) => 
+                            camera.set_ortho_factor(camera.ortho_factor() - y),
+                        _ => (),
+                    },
                     _ => ()
                 }
             }
@@ -162,30 +170,9 @@ fn main() {
                 // gl::BindVertexArray(mesh.render_data().vao);
                 // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
 
-                let aspect_width = windowed_context.window().inner_size().width as f32;
-                let mut aspect_height = windowed_context.window().inner_size().height as f32;
-                let mut aspect: f32;
-                if aspect_height == 0.0 { aspect_height = 1.0 }
-                if aspect_height > aspect_width { aspect = aspect_height / aspect_width }
-                else { aspect = aspect_width / aspect_height }
-
-                // Перспективная проекция
-                projection_matrix = Matrix4::from(PerspectiveFov { 
-                    fovy: Rad(field_of_view.to_radians()),
-                    aspect, 
-                    near: 0.1,
-                    far: 300.0
-                });
-
-                // Ортографическая проекция
-                // projection_matrix = Matrix4::from(Ortho {
-                //     left: -aspect_width / 6.0,
-                //     right: aspect_width / 6.0,
-                //     bottom: -aspect_height / 6.0,
-                //     top: aspect_height / 6.0,
-                //     near: -300.0,
-                //     far: 300.0,
-                // });
+                let view_width = windowed_context.window().inner_size().width as f32;
+                let view_height = windowed_context.window().inner_size().height as f32;
+                camera.set_view_size((view_width, view_height));
 
                 // Вращение по кругу
                 // let elapsed_time = now.elapsed();
@@ -214,39 +201,34 @@ fn main() {
 
                 if arrow_h > 0 {
                     let matrix = Matrix4::from_translation(camera.right() * speed);
-                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                     arrow_h = 0;
                 }
                 else if arrow_h < 0 {
                     let matrix = Matrix4::from_translation(-camera.right() * speed);
-                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                     arrow_h = 0;
                 }
                 if arrow_v > 0 {
                     let matrix = Matrix4::from_translation(-camera.direction() * speed);
-                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                     arrow_v = 0;
                 }
                 else if arrow_v < 0 {
                     let matrix = Matrix4::from_translation(camera.direction() * speed);
-                    camera.set_target((matrix * camera.target().extend(1.0)).truncate());
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                     arrow_v = 0;
                 }
 
+                shader_program.run();
+                shader_program.set_uniform_matrix("view", &camera.view_matrix());
+                shader_program.set_uniform_matrix("projection", &camera.projection_matrix());
+                shader_program.set_uniform_int("texture1", 0);
 
                 for i in 0..render_objects.len() {
                     let current_object = &render_objects[i];
                     current_object.bind();
-
-                    shader_program.run();
                     shader_program.set_uniform_matrix("model", &current_object.transform_matrix());
-                    shader_program.set_uniform_matrix("view", &camera.lookat_matrix());
-                    shader_program.set_uniform_matrix("projection", &projection_matrix);
-                    shader_program.set_uniform_int("texture1", 0);
 
                     if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                     else { shader_program.set_uniform_int("wire_mode", 1); }
