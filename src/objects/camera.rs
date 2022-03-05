@@ -89,7 +89,7 @@ impl Camera {
                 bottom: -1.0 * self.ortho_factor,
                 top: 1.0 * self.ortho_factor,
                 near: 0.1,
-                far: 300.0,
+                far: 500.0,
             })
         }
         else {
@@ -97,7 +97,7 @@ impl Camera {
                 fovy: Rad(self.field_of_view.to_radians()),
                 aspect, 
                 near: 0.1,
-                far: 300.0
+                far: 500.0
             })
         }
     }
