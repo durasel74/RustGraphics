@@ -2,6 +2,7 @@ mod objects;
 
 use gl;
 use std::ffi;
+use std::path::Path;
 
 use std::time;
 use rand::Rng;
@@ -29,7 +30,6 @@ fn main() {
         .build_windowed(window_builder, &event_loop)
         .unwrap();
     let windowed_context = unsafe { windowed_context.make_current().unwrap() };
-    windowed_context.window().set_cursor_grab(true).unwrap();
     windowed_context.window().set_cursor_visible(false);
 
     let fullscreen = window::Fullscreen::Exclusive(prompt_for_video_mode(
@@ -43,15 +43,16 @@ fn main() {
     let mesh: Mesh = figures::cube();
 
     // Загрузка текстур
-    let texture_loadresult = Texture::from_file("Pictures\\Rushia2.jpg");
+    println!("{}", Path::new("Pictures/Rushia2.jpg").to_str().unwrap());
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/Rushia2.jpg").to_str().unwrap());
     let texture1 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
     };
 
     // Пути к файлам шейдеров
-    let vert_filename = "Shaders\\triangles.vert";
-    let frag_filename = "Shaders\\triangles.frag";
+    let vert_filename = Path::new("Shaders/triangles.vert").to_str().unwrap();
+    let frag_filename = Path::new("Shaders/triangles.frag").to_str().unwrap();
 
     // Загрузка и компиляция шейдеров
     let shader_loadresult = objects::ShaderProgram::from_files(
