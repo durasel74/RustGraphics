@@ -59,7 +59,10 @@ impl Camera {
     pub fn set_is_ortho(&mut self, value: bool) { self.is_ortho = value; }
 
     pub fn ortho_factor(&self) -> f32 { self.ortho_factor }
-    pub fn set_ortho_factor(&mut self, value: f32) { self.ortho_factor = value; }
+    pub fn set_ortho_factor(&mut self, value: f32) { 
+        if value <= 1.0 { self.ortho_factor = 1.0; }
+        else { self.ortho_factor = value;  }
+    }
 
     pub fn view_matrix(&self) -> Matrix4<f32> {
         let direction_matrix = Matrix4::from_cols(

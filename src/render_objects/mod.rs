@@ -5,6 +5,7 @@ mod mesh;
 mod render_data;
 mod render_object;
 mod camera;
+mod view_port;
 mod misc;
 pub mod figures;
 
@@ -15,5 +16,6 @@ pub use mesh::Mesh;
 pub use render_data::RenderData;
 pub use render_object::RenderObject;
 pub use camera::Camera;
+pub use view_port::ViewPort;
 pub use misc::ShaderError;
 pub use misc::create_string_buffer;

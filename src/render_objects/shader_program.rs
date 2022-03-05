@@ -91,7 +91,7 @@ impl ShaderProgram {
     pub fn frag_id(&self) -> GLuint { self.frag_id }
 
     /// Выполняет программу шейдера.
-    pub fn run(&self) { 
+    pub fn use_(&self) { 
         unsafe { gl::UseProgram(self.id); } 
     }
 

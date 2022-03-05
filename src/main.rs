@@ -7,7 +7,7 @@ use std::time;
 use rand::Rng;
 use cgmath::prelude::InnerSpace;
 use cgmath::{ Rad, Matrix, Matrix4, Vector3, vec3, PerspectiveFov, Ortho };
-use render_objects::{ Mesh, RenderObject, Camera, Texture, figures };
+use render_objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, figures };
 
 use glutin;
 use glutin::window;
@@ -61,6 +61,8 @@ fn main() {
         Err(err) => { println!("{}", err); return }
     };
 
+    let mut view_port = ViewPort::new();
+
     let mut camera = Camera::new();
     camera.set_is_look_at(false);
     camera.set_is_ortho(false);
@@ -87,6 +89,7 @@ fn main() {
     let mut draw_mode = 0;
     let mut speed = 0.5;
     let sensitivity = 1.0;
+    let mut camera_number = 0;
     
     let mut arrow_h = 0i8;
     let mut arrow_v = 0i8;
@@ -99,7 +102,7 @@ fn main() {
     let mut delta_y = 0.0;
     
     let now = time::Instant::now();
-    //let radius = 4.0;
+    //let radius = 6.0;
     
     event_loop.run(move |event, _, control_flow| {
         *control_flow = event_loop::ControlFlow::Poll;
@@ -131,6 +134,16 @@ fn main() {
                             if camera.is_ortho() { camera.set_is_ortho(false); }
                             else { camera.set_is_ortho(true); }
                         },
+                        event::KeyboardInput { scancode: 51, state: event::ElementState::Released, ..} =>
+                        {
+                            camera_number -= 1;
+                            if camera_number < 0 { camera_number = 1; }
+                        },
+                        event::KeyboardInput { scancode: 52, state: event::ElementState::Released, ..} =>
+                        {
+                            camera_number += 1;
+                            if camera_number > 1 { camera_number = 0; }
+                        },
 
                         event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
                             arrow_v += 1,
@@ -144,7 +157,7 @@ fn main() {
                         _ => ()
                     },
 
-                    event::DeviceEvent::MouseMotion { delta } => 
+                    event::DeviceEvent::MouseMotion { delta } =>
                     {
                         delta_x = delta.0;
                         delta_y = delta.1;
@@ -170,22 +183,22 @@ fn main() {
                 // gl::BindVertexArray(mesh.render_data().vao);
                 // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
 
-                let view_width = windowed_context.window().inner_size().width as f32;
-                let view_height = windowed_context.window().inner_size().height as f32;
-                camera.set_view_size((view_width, view_height));
+                let view_width = windowed_context.window().inner_size().width as i32;
+                let view_height = windowed_context.window().inner_size().height as i32;
+                view_port.set_position((0, 0));
+                view_port.set_size((view_width, view_height));
 
                 // Вращение по кругу
                 // let elapsed_time = now.elapsed();
                 // let rotate_value = (elapsed_time.as_millis() as f32) / 999.0;
                 // let camx = rotate_value.sin() * radius;
                 // let camy = rotate_value.cos() * radius;
-                // camera.set_position(vec3(camx, 0.0, camy));
+                // current_camera.set_position(vec3(camx, 1.0, camy));
 
                 let offset_x = delta_x * sensitivity;
                 let offset_y = delta_y * sensitivity;
                 delta_x = 0.0;
                 delta_y = 0.0;
-
                 yaw += offset_x as f32;
                 pitch += offset_y as f32;
                 if (pitch > 89.0) { pitch = 89.0; }
@@ -220,24 +233,12 @@ fn main() {
                     arrow_v = 0;
                 }
 
-                shader_program.run();
-                shader_program.set_uniform_matrix("view", &camera.view_matrix());
-                shader_program.set_uniform_matrix("projection", &camera.projection_matrix());
+                shader_program.use_();
                 shader_program.set_uniform_int("texture1", 0);
+                if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
+                else { shader_program.set_uniform_int("wire_mode", 1); }
 
-                for i in 0..render_objects.len() {
-                    let current_object = &render_objects[i];
-                    current_object.bind();
-                    shader_program.set_uniform_matrix("model", &current_object.transform_matrix());
-
-                    if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
-                    else { shader_program.set_uniform_int("wire_mode", 1); }
-
-                    unsafe {
-                        gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
-                            gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
-                    }
-                }
+                view_port.draw(&shader_program, &mut camera, &render_objects);
                 windowed_context.swap_buffers().unwrap();
             }
             _ => (),
@@ -251,7 +252,8 @@ control_flow: &mut event_loop::ControlFlow) {
         event::WindowEvent::CloseRequested =>
             *control_flow = event_loop::ControlFlow::Exit,
         event::WindowEvent::Resized(physical_size) => unsafe {
-            gl::Viewport(0, 0, physical_size.width as i32, physical_size.height as i32); },
+            //gl::Viewport(0, 0, physical_size.width as i32, physical_size.height as i32); 
+        },
         _ => ()
     }
 }
