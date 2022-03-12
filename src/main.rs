@@ -41,10 +41,10 @@ fn main() {
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    let mesh: Mesh = figures::cube();
+    let mesh: Mesh = figures::create_sphere(3.0, 60, 20);
 
     // Загрузка текстур
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/Rushia2.jpg").to_str().unwrap());
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/container.jpg").to_str().unwrap());
     let texture1 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
@@ -70,29 +70,29 @@ fn main() {
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
     let mut render_objects: Vec<RenderObject> = vec![];
-    //let mut rng = rand::thread_rng();
-    //let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
-    // for i in 1..1000 {
-    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
-    //     new_object.set_position(vec3(generator(), generator(), generator()));
-    //     render_objects.push(new_object);
-    // }
-    //render_objects.push(RenderObject::from_mesh(mesh.clone()));
-
-    let mult = 50;
-    for i in 1..10 {
-        for j in 1..10 {
-            for k in 1..10 {
-                let x = (i * mult) as f32;
-                let z = (j * mult) as f32;
-                let y = (k * mult) as f32;
-                let mut new_object = RenderObject::from_mesh(mesh.clone());
-                new_object.set_position(vec3(x, y, z));
-                new_object.set_scale(20.0);
-                render_objects.push(new_object);
-            }
-        }
+    let mut rng = rand::thread_rng();
+    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
+    for i in 1..1000 {
+        let mut new_object = RenderObject::from_mesh(mesh.clone());
+        new_object.set_position(vec3(generator(), generator(), generator()));
+        render_objects.push(new_object);
     }
+    render_objects.push(RenderObject::from_mesh(mesh.clone()));
+
+    // let mult = 50;
+    // for i in 1..10 {
+    //     for j in 1..10 {
+    //         for k in 1..10 {
+    //             let x = (i * mult) as f32;
+    //             let z = (j * mult) as f32;
+    //             let y = (k * mult) as f32;
+    //             let mut new_object = RenderObject::from_mesh(mesh.clone());
+    //             new_object.set_position(vec3(x, y, z));
+    //             new_object.set_scale(20.0);
+    //             render_objects.push(new_object);
+    //         }
+    //     }
+    // }
     
     // Первоначальная настройка пайплайна
     unsafe { 
@@ -106,9 +106,9 @@ fn main() {
     let sensitivity = 1.0;
     let mut camera_number = 0;
 
-    let normal_speed = 0.5;
-    let fast_speed = 1.5;
-    let mut speed = 0.5;
+    let normal_speed = 0.2;
+    let fast_speed = 1.0;
+    let mut speed = normal_speed;
     
     let mut forward = false;
     let mut back = false;

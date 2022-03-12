@@ -181,6 +181,40 @@ pub fn tetrahedron() -> Mesh {
     Mesh::from_verteices(vertices, indices)
 }
 
+pub fn create_sphere(radius: f32, sector_count: u32, stack_count:u32) -> Mesh {
+    let mut vertices: Vec<f32> = vec![];
+    let mut indices: Vec<u16> = vec![];
+    let sector_step = 2.0 * PI / sector_count as f32;
+    let stack_step = PI / stack_count as f32;
+
+    for i in 0..stack_count + 1 {
+        let stack_angle = PI / 2.0 - (i as f32) * stack_step;
+        let xy = radius * stack_angle.cos();
+        let z = radius * stack_angle.sin();
+        let mut k1 = i as u16 * (sector_count as u16 + 1);
+        let mut k2 = k1 + sector_count as u16 + 1;
+
+        for j in 0..sector_count + 1 {
+            let sector_angle = j as f32 * sector_step;
+            let x = xy * sector_angle.cos();
+            let y = xy * sector_angle.sin();
+            let s = j as f32 / sector_count as f32;
+            let t = i as f32 / stack_count as f32;
+            let color = (z + y) / 6.0 + 0.5;
+            vec_push_range(&mut vertices, vec![x, y, z,  color, color, color,  s, t]);
+
+            if i != 0 {
+                vec_push_range(&mut indices, vec![k1, k2, k1 + 1]);
+            }
+            if i != stack_count {
+                vec_push_range(&mut indices, vec![k1 + 1, k2, k2 + 1]);
+            }
+            k1 += 1; k2 += 1;
+        }
+    }
+    Mesh::from_verteices(vertices, indices)
+}
+
 pub fn vec_push_range<T>(vect: &mut Vec<T>, values: Vec<T>) {
     for i in values { vect.push(i); }
 }
