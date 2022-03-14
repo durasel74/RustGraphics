@@ -65,7 +65,7 @@ fn main() {
     let mut view_port = ViewPort::new();
 
     let mut camera = Camera::new();
-    camera.set_is_look_at(false);
+    camera.set_is_look_at(true);
     camera.set_is_ortho(false);
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
@@ -119,13 +119,8 @@ fn main() {
 
     let mut yaw = 0.0f32;
     let mut pitch = 0.0f32;
-    let mut last_x = 0.0;
-    let mut last_y = 0.0;
     let mut delta_x = 0.0;
     let mut delta_y = 0.0;
-    
-    let now = time::Instant::now();
-    //let radius = 6.0;
     
     event_loop.run(move |event, _, control_flow| {
         *control_flow = event_loop::ControlFlow::Poll;
@@ -225,20 +220,10 @@ fn main() {
                     gl::BindTexture(gl::TEXTURE_2D, texture1.id());
                 }
 
-                // gl::BindVertexArray(mesh.render_data().vao);
-                // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
-
                 let view_width = windowed_context.window().inner_size().width as i32;
                 let view_height = windowed_context.window().inner_size().height as i32;
                 view_port.set_position((0, 0));
                 view_port.set_size((view_width, view_height));
-
-                // Вращение по кругу
-                // let elapsed_time = now.elapsed();
-                // let rotate_value = (elapsed_time.as_millis() as f32) / 999.0;
-                // let camx = rotate_value.sin() * radius;
-                // let camy = rotate_value.cos() * radius;
-                // current_camera.set_position(vec3(camx, 1.0, camy));
 
                 let offset_x = delta_x * sensitivity;
                 let offset_y = delta_y * sensitivity;
@@ -254,8 +239,19 @@ fn main() {
                 let direct_x = radians_yaw.cos() * radians_pitch.cos();
                 let direct_y = radians_pitch.sin();
                 let direct_z = radians_yaw.sin() * radians_pitch.cos();
-                let direction = vec3(direct_x, direct_y, direct_z).normalize();
-                camera.set_direction(direction);
+
+                if !camera.is_look_at() {
+                    let direction = vec3(direct_x, direct_y, direct_z).normalize();
+                    camera.set_direction(direction);
+                }
+                else {
+                    let factor = camera.ortho_factor();
+                    camera.set_position(vec3(
+                        direct_x * factor,
+                        direct_y * factor,
+                        direct_z * factor
+                    ));
+                }
 
                 let mut matrix = Matrix4::from_scale(1.0);
                 if forward {
