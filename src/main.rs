@@ -41,7 +41,8 @@ fn main() {
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    let mesh: Mesh = figures::create_sphere(3.0, 60, 20);
+    // let mesh: Mesh = figures::create_sphere(3.0, 60, 20);
+    let mesh: Mesh = figures::cube();
 
     // Загрузка текстур
     let texture_loadresult = Texture::from_file(Path::new("Pictures/container.jpg").to_str().unwrap());
@@ -51,13 +52,21 @@ fn main() {
     };
 
     // Пути к файлам шейдеров
-    let vert_filename = Path::new("Shaders/triangles.vert").to_str().unwrap();
-    let frag_filename = Path::new("Shaders/triangles.frag").to_str().unwrap();
+    let vert_filename = Path::new("Shaders/object.vert").to_str().unwrap();
+    let frag_filename = Path::new("Shaders/object.frag").to_str().unwrap();
+    let light_frag_filename = Path::new("Shaders/light.frag").to_str().unwrap();
 
     // Загрузка и компиляция шейдеров
     let shader_loadresult = objects::ShaderProgram::from_files(
         vert_filename, frag_filename);
     let shader_program = match shader_loadresult {
+        Ok(program) => program,
+        Err(err) => { println!("{}", err); return }
+    };
+
+    let shader_loadresult = objects::ShaderProgram::from_files(
+        vert_filename, light_frag_filename);
+    let light_shader_program = match shader_loadresult {
         Ok(program) => program,
         Err(err) => { println!("{}", err); return }
     };
@@ -70,14 +79,17 @@ fn main() {
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
     let mut render_objects: Vec<RenderObject> = vec![];
-    let mut rng = rand::thread_rng();
-    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
-    for i in 1..1000 {
-        let mut new_object = RenderObject::from_mesh(mesh.clone());
-        new_object.set_position(vec3(generator(), generator(), generator()));
-        render_objects.push(new_object);
-    }
+    // let mut rng = rand::thread_rng();
+    // let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
+    // for i in 1..1000 {
+    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
+    //     new_object.set_position(vec3(generator(), generator(), generator()));
+    //     render_objects.push(new_object);
+    // }
     render_objects.push(RenderObject::from_mesh(mesh.clone()));
+    let mut light = RenderObject::from_mesh(mesh.clone());
+    light.set_position(vec3(4.0, 1.0, 10.0));
+    light.set_scale(0.2);
 
     // let mult = 50;
     // for i in 1..10 {
@@ -121,6 +133,9 @@ fn main() {
     let mut pitch = 0.0f32;
     let mut delta_x = 0.0;
     let mut delta_y = 0.0;
+
+    let light_color = vec3(1.0, 1.0, 1.0);
+    let ambient_strength = 0.2;
     
     event_loop.run(move |event, _, control_flow| {
         *control_flow = event_loop::ControlFlow::Poll;
@@ -281,10 +296,24 @@ fn main() {
 
                 shader_program.use_();
                 shader_program.set_uniform_int("texture1", 0);
+                shader_program.set_uniform_vector("lightColor", &light_color);
+                shader_program.set_uniform_float("ambientStrength", ambient_strength);
+
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
 
                 view_port.draw(&shader_program, &mut camera, &render_objects);
+
+                light_shader_program.use_();
+                light_shader_program.set_uniform_matrix("view", &camera.view_matrix());
+                light_shader_program.set_uniform_matrix("projection", &camera.projection_matrix());
+
+                light.bind();
+                light_shader_program.set_uniform_matrix("model", &light.transform_matrix());
+                unsafe {
+                    gl::DrawElements(gl::TRIANGLES, light.mesh().indices().len() as i32,
+                        gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
+                }
                 windowed_context.swap_buffers().unwrap();
             }
             _ => (),
