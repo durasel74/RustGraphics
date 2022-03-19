@@ -26,16 +26,23 @@ impl ViewPort {
     render_objects: &Vec<RenderObject>) {
         unsafe {gl::Viewport(self.position.0, self.position.1, self.size.0, self.size.1); }
         camera.set_view_size((self.size.0 as f32, self.size.1 as f32));
-        shader_program.set_uniform_matrix("view", &camera.view_matrix());
-        shader_program.set_uniform_matrix("projection", &camera.projection_matrix());
+        shader_program.set_uniform_matrix4("view", &camera.view_matrix());
+        shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
 
         for i in 0..render_objects.len() {
             let current_object = &render_objects[i];
-            current_object.bind();
-            shader_program.set_uniform_matrix("model", &current_object.transform_matrix());
+            shader_program.set_uniform_matrix4("model", &current_object.transform_matrix());
+            shader_program.set_uniform_matrix3("normalMatrix", &current_object.normal_matrix());
+            shader_program.set_uniform_vector("objectColor", &current_object.color());
+            // unsafe {
+            //     gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
+            //         gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
+            // }
+
             unsafe {
-                gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
-                    gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
+                gl::BindVertexArray(current_object.mesh().render_data().vao);
+                //gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
+                gl::DrawArrays(gl::TRIANGLES, 0, current_object.mesh().vertices().len() as i32);
             }
         }
     }

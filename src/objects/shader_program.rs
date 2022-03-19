@@ -2,7 +2,7 @@ use std::fs;
 use std::ffi;
 use gl;
 use gl::types::{ GLuint };
-use cgmath::{ Vector3, Matrix, Matrix4 };
+use cgmath::{ Vector3, Matrix, Matrix3, Matrix4 };
 use super::Shader;
 use super::ShaderError;
 
@@ -119,7 +119,15 @@ impl ShaderProgram {
         }
     }
 
-    pub fn set_uniform_matrix(&self, field_name: &str, value: &Matrix4<f32>) {
+    pub fn set_uniform_matrix3(&self, field_name: &str, value: &Matrix3<f32>) {
+        let cfield_name = ffi::CString::new(field_name).unwrap();
+        unsafe {
+            let location = gl::GetUniformLocation(self.id(), cfield_name.as_ptr());
+            gl::UniformMatrix3fv(location, 1, gl::FALSE, value.as_ptr());
+        }
+    }
+
+    pub fn set_uniform_matrix4(&self, field_name: &str, value: &Matrix4<f32>) {
         let cfield_name = ffi::CString::new(field_name).unwrap();
         unsafe {
             let location = gl::GetUniformLocation(self.id(), cfield_name.as_ptr());

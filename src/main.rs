@@ -42,7 +42,7 @@ fn main() {
 
     // Загрузка модели
     // let mesh: Mesh = figures::create_sphere(3.0, 60, 20);
-    let mesh: Mesh = figures::cube();
+    let mesh: Mesh = figures::normal_cube();
 
     // Загрузка текстур
     let texture_loadresult = Texture::from_file(Path::new("Pictures/container.jpg").to_str().unwrap());
@@ -74,22 +74,26 @@ fn main() {
     let mut view_port = ViewPort::new();
 
     let mut camera = Camera::new();
-    camera.set_is_look_at(true);
+    camera.set_is_look_at(false);
     camera.set_is_ortho(false);
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
     let mut render_objects: Vec<RenderObject> = vec![];
-    // let mut rng = rand::thread_rng();
-    // let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
-    // for i in 1..1000 {
-    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
-    //     new_object.set_position(vec3(generator(), generator(), generator()));
-    //     render_objects.push(new_object);
-    // }
-    render_objects.push(RenderObject::from_mesh(mesh.clone()));
+    let mut rng = rand::thread_rng();
+    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
+    for i in 1..600 {
+        let mut new_object = RenderObject::from_mesh(mesh.clone());
+        new_object.set_color(vec3(0.3, 0.2, 0.9));
+        new_object.set_position(vec3(generator(), generator(), generator()));
+        render_objects.push(new_object);
+    }
+    let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    rend_obj.set_color(vec3(0.3, 0.2, 0.9));
+    render_objects.push(rend_obj);
     let mut light = RenderObject::from_mesh(mesh.clone());
-    light.set_position(vec3(4.0, 1.0, 10.0));
+    light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
+    light.set_color(vec3(1.0, 1.0, 1.0));
 
     // let mult = 50;
     // for i in 1..10 {
@@ -134,8 +138,9 @@ fn main() {
     let mut delta_x = 0.0;
     let mut delta_y = 0.0;
 
-    let light_color = vec3(1.0, 1.0, 1.0);
-    let ambient_strength = 0.2;
+    let light_pos = light.position();
+    let light_color = light.color();
+    let ambient_strength = 0.6;
     
     event_loop.run(move |event, _, control_flow| {
         *control_flow = event_loop::ControlFlow::Poll;
@@ -235,6 +240,8 @@ fn main() {
                     gl::BindTexture(gl::TEXTURE_2D, texture1.id());
                 }
 
+                
+
                 let view_width = windowed_context.window().inner_size().width as i32;
                 let view_height = windowed_context.window().inner_size().height as i32;
                 view_port.set_position((0, 0));
@@ -295,7 +302,8 @@ fn main() {
                 }
 
                 shader_program.use_();
-                shader_program.set_uniform_int("texture1", 0);
+                //shader_program.set_uniform_int("texture1", 0);
+                shader_program.set_uniform_vector("lightPos", &light_pos);
                 shader_program.set_uniform_vector("lightColor", &light_color);
                 shader_program.set_uniform_float("ambientStrength", ambient_strength);
 
@@ -304,15 +312,17 @@ fn main() {
 
                 view_port.draw(&shader_program, &mut camera, &render_objects);
 
+                ///////////////////////////
                 light_shader_program.use_();
-                light_shader_program.set_uniform_matrix("view", &camera.view_matrix());
-                light_shader_program.set_uniform_matrix("projection", &camera.projection_matrix());
+                light_shader_program.set_uniform_matrix4("view", &camera.view_matrix());
+                light_shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
 
-                light.bind();
-                light_shader_program.set_uniform_matrix("model", &light.transform_matrix());
+                light_shader_program.set_uniform_matrix4("model", &light.transform_matrix());
+                light_shader_program.set_uniform_vector("lightColor", &light.color());
                 unsafe {
-                    gl::DrawElements(gl::TRIANGLES, light.mesh().indices().len() as i32,
-                        gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
+                    gl::BindVertexArray(light.mesh().render_data().vao);
+                    //gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
+                    gl::DrawArrays(gl::TRIANGLES, 0, light.mesh().vertices().len() as i32);
                 }
                 windowed_context.swap_buffers().unwrap();
             }
