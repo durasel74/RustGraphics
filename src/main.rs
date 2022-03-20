@@ -81,7 +81,7 @@ fn main() {
     let mut render_objects: Vec<RenderObject> = vec![];
     let mut rng = rand::thread_rng();
     let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
-    for i in 1..600 {
+    for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         new_object.set_color(vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0));
         new_object.set_position(vec3(generator(), generator(), generator()));
@@ -116,18 +116,15 @@ fn main() {
 
     let mut is_fullscreen = false;
     let mut draw_mode = 0;
-    let sensitivity = 2.0;
+    let sensitivity = 0.7;
     let mut camera_number = 0;
 
-    // let normal_speed = 0.2;
-    // let fast_speed = 1.0;
-    // let mut speed = normal_speed;
-
-    let normal_speed_step = 0.02;
-    let fast_speed_step = 0.04;
+    let normal_speed_step = 0.005;
+    let fast_speed_step = 0.007;
     let mut current_speed_step = normal_speed_step;
-    let max_normal_speed = 0.4;
-    let max_fast_speed = 2.0;
+    let max_normal_speed = 0.1;
+    let max_fast_speed = 1.0;
+    let mut current_max_speed = max_normal_speed;
     let mut speed = 0.0;
     
     let mut forward = false;
@@ -206,7 +203,10 @@ fn main() {
                         event::KeyboardInput { scancode: 57, state: event::ElementState::Released, ..} =>
                             up = false,
                         event::KeyboardInput { scancode: 42, state: event::ElementState::Released, ..} =>
-                            current_speed_step = normal_speed_step,
+                            { 
+                                current_speed_step = normal_speed_step; 
+                                current_max_speed = max_normal_speed;
+                            },
 
                         event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
                             forward = true,
@@ -221,7 +221,10 @@ fn main() {
                         event::KeyboardInput { scancode: 57, state: event::ElementState::Pressed, ..} =>
                             up = true,
                         event::KeyboardInput { scancode: 42, state: event::ElementState::Pressed, ..} =>
-                            current_speed_step = fast_speed_step,
+                            {
+                                current_speed_step = fast_speed_step;
+                                current_max_speed = max_fast_speed;
+                            },
                         
                         //event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                         _ => ()
@@ -261,7 +264,7 @@ fn main() {
                 view_port.set_position((0, 0));
                 view_port.set_size((view_width, view_height));
 
-                let offset_x = delta_x * sensitivity;
+                let offset_x = delta_x * sensitivity * delta_time as f64;
                 let offset_y = delta_y * sensitivity;
                 delta_x = 0.0;
                 delta_y = 0.0;
@@ -297,8 +300,12 @@ fn main() {
                 light.set_position(vec3(camx, (camx + camy) / 2.0, camy));
 
                 let mut matrix = Matrix4::from_scale(1.0);
+                if forward || back || right || left || up || down {
+                    if speed > current_max_speed { speed -= fast_speed_step * 4.0; }
+                    else { speed += current_speed_step; }
+                }
+                else { speed = 0.0; }
                 if forward {
-                    speed += current_speed_step;
                     matrix = Matrix4::from_translation(-camera.direction() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
