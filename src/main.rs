@@ -83,7 +83,7 @@ fn main() {
     let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
     for i in 1..600 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
-        new_object.set_color(vec3(0.3, 0.2, 0.9));
+        new_object.set_color(vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0));
         new_object.set_position(vec3(generator(), generator(), generator()));
         render_objects.push(new_object);
     }
@@ -109,22 +109,26 @@ fn main() {
     //         }
     //     }
     // }
-    
-    // Первоначальная настройка пайплайна
-    unsafe { 
-        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-        gl::PointSize(3.0);
-        gl::Enable(gl::DEPTH_TEST);
-    }
+
+    let now = time::Instant::now();
+    let mut old_since_time = now.elapsed().as_nanos();
+    let radius = 4.0;
 
     let mut is_fullscreen = false;
     let mut draw_mode = 0;
-    let sensitivity = 1.0;
+    let sensitivity = 2.0;
     let mut camera_number = 0;
 
-    let normal_speed = 0.2;
-    let fast_speed = 1.0;
-    let mut speed = normal_speed;
+    // let normal_speed = 0.2;
+    // let fast_speed = 1.0;
+    // let mut speed = normal_speed;
+
+    let normal_speed_step = 0.02;
+    let fast_speed_step = 0.04;
+    let mut current_speed_step = normal_speed_step;
+    let max_normal_speed = 0.4;
+    let max_fast_speed = 2.0;
+    let mut speed = 0.0;
     
     let mut forward = false;
     let mut back = false;
@@ -138,10 +142,16 @@ fn main() {
     let mut delta_x = 0.0;
     let mut delta_y = 0.0;
 
-    let light_pos = light.position();
-    let light_color = light.color();
-    let ambient_strength = 0.6;
-    
+    // Первоначальная настройка пайплайна
+    unsafe { 
+        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+        gl::PointSize(3.0);
+        gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::CULL_FACE);
+        gl::FrontFace(gl::CW);
+        gl::CullFace(gl::BACK);
+    }
+
     event_loop.run(move |event, _, control_flow| {
         *control_flow = event_loop::ControlFlow::Poll;
 
@@ -196,7 +206,7 @@ fn main() {
                         event::KeyboardInput { scancode: 57, state: event::ElementState::Released, ..} =>
                             up = false,
                         event::KeyboardInput { scancode: 42, state: event::ElementState::Released, ..} =>
-                            speed = normal_speed,
+                            current_speed_step = normal_speed_step,
 
                         event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
                             forward = true,
@@ -211,7 +221,7 @@ fn main() {
                         event::KeyboardInput { scancode: 57, state: event::ElementState::Pressed, ..} =>
                             up = true,
                         event::KeyboardInput { scancode: 42, state: event::ElementState::Pressed, ..} =>
-                            speed = fast_speed,
+                            current_speed_step = fast_speed_step,
                         
                         //event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                         _ => ()
@@ -235,12 +245,16 @@ fn main() {
                 unsafe {
                     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
+                    set_cullface_mode(draw_mode);
 
-                    gl::ActiveTexture(gl::TEXTURE0);
-                    gl::BindTexture(gl::TEXTURE_2D, texture1.id());
+                    // gl::ActiveTexture(gl::TEXTURE0);
+                    // gl::BindTexture(gl::TEXTURE_2D, texture1.id());
                 }
 
-                
+                // Дельта времени
+                let since_time = now.elapsed().as_nanos();
+                let delta_time = ((since_time - old_since_time) as f32) / 10000000.0;
+                old_since_time = since_time;
 
                 let view_width = windowed_context.window().inner_size().width as i32;
                 let view_height = windowed_context.window().inner_size().height as i32;
@@ -275,9 +289,17 @@ fn main() {
                     ));
                 }
 
+                // Вращение по кругу
+                let elapsed_time = now.elapsed();
+                let rotate_value = (elapsed_time.as_millis() as f32) / 999.0;
+                let camx = rotate_value.sin() * radius;
+                let camy = rotate_value.cos() * radius;
+                light.set_position(vec3(camx, (camx + camy) / 2.0, camy));
+
                 let mut matrix = Matrix4::from_scale(1.0);
                 if forward {
-                    matrix = Matrix4::from_translation(-camera.direction() * speed);
+                    speed += current_speed_step;
+                    matrix = Matrix4::from_translation(-camera.direction() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
                 if back {
@@ -303,9 +325,10 @@ fn main() {
 
                 shader_program.use_();
                 //shader_program.set_uniform_int("texture1", 0);
-                shader_program.set_uniform_vector("lightPos", &light_pos);
-                shader_program.set_uniform_vector("lightColor", &light_color);
-                shader_program.set_uniform_float("ambientStrength", ambient_strength);
+                shader_program.set_uniform_vector("lightPos", &light.position());
+                shader_program.set_uniform_vector("lightColor", &light.color());
+                // shader_program.set_uniform_float("ambientStrength", ambient_strength);
+                // shader_program.set_uniform_float("specularStrength", specular_strength);
 
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
@@ -331,13 +354,13 @@ fn main() {
     });
 }
 
-fn window_event_handler(event: event::WindowEvent, 
+fn window_event_handler(event: event::WindowEvent,
 control_flow: &mut event_loop::ControlFlow) {
     match event {
         event::WindowEvent::CloseRequested =>
             *control_flow = event_loop::ControlFlow::Exit,
         event::WindowEvent::Resized(physical_size) => unsafe {
-            //gl::Viewport(0, 0, physical_size.width as i32, physical_size.height as i32); 
+            //gl::Viewport(0, 0, physical_size.width as i32, physical_size.height as i32);
         },
         _ => ()
     }
@@ -349,6 +372,17 @@ fn to_draw_mode(value: u32) -> gl::types::GLenum {
         1 => gl::LINE,
         2 => gl::POINT,
         _ => gl::FILL
+    }
+}
+
+fn set_cullface_mode(value: u32) {
+    unsafe {
+        match value {
+            0 => gl::Enable(gl::CULL_FACE),
+            1 => gl::Disable(gl::CULL_FACE),
+            2 => gl::Disable(gl::CULL_FACE),
+            _ => gl::Enable(gl::CULL_FACE)
+        }
     }
 }
 

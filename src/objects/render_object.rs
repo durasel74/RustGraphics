@@ -39,8 +39,8 @@ impl RenderObject {
         pos_matrix * rot_matrix * sca_matrix
     }
 
-    pub fn normal_matrix(&self) -> Matrix3<f32> {
-        let matrix = self.transform_matrix().invert().unwrap().transpose();
+    pub fn normal_matrix(&self, view_matrix: &Matrix4<f32>) -> Matrix3<f32> {
+        let matrix = (view_matrix * self.transform_matrix()).invert().unwrap().transpose();
         let Matrix4{x, y, z, w: _} = matrix;
         Matrix3::from_cols(x.truncate(), y.truncate(), z.truncate())
     }
