@@ -8,7 +8,7 @@ use std::time;
 use rand::Rng;
 use cgmath::prelude::InnerSpace;
 use cgmath::{ Rad, Matrix, Matrix4, Vector3, vec3, PerspectiveFov, Ortho };
-use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, figures };
+use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, figures };
 
 use glutin;
 use glutin::window;
@@ -41,7 +41,6 @@ fn main() {
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    // let mesh: Mesh = figures::create_sphere(3.0, 60, 20);
     let mesh: Mesh = figures::normal_cube();
 
     // Загрузка текстур
@@ -79,21 +78,32 @@ fn main() {
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
     let mut render_objects: Vec<RenderObject> = vec![];
-    let mut rng = rand::thread_rng();
-    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
     for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
-        new_object.set_color(vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0));
-        new_object.set_position(vec3(generator(), generator(), generator()));
+        let mut new_material = Material::new();
+        new_material.ambient = generate_normal_vector();
+        new_material.diffuse = generate_normal_vector();
+        new_material.specular = generate_normal_vector();
+        new_object.set_material(new_material);
+        new_object.set_position(generate_vector());
         render_objects.push(new_object);
     }
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    rend_obj.set_color(vec3(0.3, 0.2, 0.9));
+    let mut new_material = Material::new();
+    new_material.ambient = generate_normal_vector();
+    new_material.diffuse = generate_normal_vector();
+    new_material.specular = generate_normal_vector();
+    rend_obj.set_material(new_material);
     render_objects.push(rend_obj);
+
     let mut light = RenderObject::from_mesh(mesh.clone());
     light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
-    light.set_color(vec3(1.0, 1.0, 1.0));
+    let mut light_material = Material::new();
+    // light_material.ambient = generate_normal_vector();
+    // light_material.diffuse = generate_normal_vector();
+    // light_material.specular = generate_normal_vector();
+    light.set_material(light_material);
 
     // let mult = 50;
     // for i in 1..10 {
@@ -119,7 +129,7 @@ fn main() {
     let sensitivity = 0.7;
     let mut camera_number = 0;
 
-    let normal_speed_step = 0.005;
+    let normal_speed_step = 0.004;
     let fast_speed_step = 0.007;
     let mut current_speed_step = normal_speed_step;
     let max_normal_speed = 0.1;
@@ -310,32 +320,38 @@ fn main() {
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
                 if back {
-                    matrix = Matrix4::from_translation(camera.direction() * speed);
+                    matrix = Matrix4::from_translation(camera.direction() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
                 if right {
-                    matrix = Matrix4::from_translation(camera.right() * speed);
+                    matrix = Matrix4::from_translation(camera.right() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
                 if left {
-                    matrix = Matrix4::from_translation(-camera.right() * speed);
+                    matrix = Matrix4::from_translation(-camera.right() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
                 if up {
-                    matrix = Matrix4::from_translation(camera.up() * speed);
+                    matrix = Matrix4::from_translation(camera.up() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
                 if down {
-                    matrix = Matrix4::from_translation(-camera.up() * speed);
+                    matrix = Matrix4::from_translation(-camera.up() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
                 }
 
                 shader_program.use_();
                 //shader_program.set_uniform_int("texture1", 0);
                 shader_program.set_uniform_vector("lightPos", &light.position());
-                shader_program.set_uniform_vector("lightColor", &light.color());
-                // shader_program.set_uniform_float("ambientStrength", ambient_strength);
-                // shader_program.set_uniform_float("specularStrength", specular_strength);
+
+                shader_program.set_uniform_vector("material.ambient", &vec3(1.0, 0.5, 0.31));
+                shader_program.set_uniform_vector("material.diffuse", &vec3(1.0, 0.5, 0.31));
+                shader_program.set_uniform_vector("material.specular", &vec3(0.5, 0.5, 0.5));
+                shader_program.set_uniform_float("material.shininess", 32.0);
+
+                shader_program.set_uniform_vector("light.ambient", &light.material().ambient);
+                shader_program.set_uniform_vector("light.diffuse", &light.material().diffuse);
+                shader_program.set_uniform_vector("light.specular", &light.material().specular);
 
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
@@ -348,7 +364,7 @@ fn main() {
                 light_shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
 
                 light_shader_program.set_uniform_matrix4("model", &light.transform_matrix());
-                light_shader_program.set_uniform_vector("lightColor", &light.color());
+                light_shader_program.set_uniform_vector("lightColor", &light.material().diffuse);
                 unsafe {
                     gl::BindVertexArray(light.mesh().render_data().vao);
                     //gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
@@ -399,4 +415,16 @@ fn prompt_for_monitor(event_loop: &event_loop::EventLoop<()>) -> monitor::Monito
 
 fn prompt_for_video_mode(monitor: &monitor::MonitorHandle) -> monitor::VideoMode {
     monitor.video_modes().nth(0).unwrap()
+}
+
+fn generate_vector() -> Vector3<f32> {
+    let mut rng = rand::thread_rng();
+    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
+    vec3(generator(), generator(), generator())
+}
+
+fn generate_normal_vector() -> Vector3<f32> {
+    let mut rng = rand::thread_rng();
+    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
+    vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0)
 }

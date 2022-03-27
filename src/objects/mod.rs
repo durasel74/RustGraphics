@@ -7,6 +7,7 @@ mod render_data_normal;
 mod render_object;
 mod camera;
 mod view_port;
+mod material;
 mod misc;
 pub mod figures;
 
@@ -19,5 +20,6 @@ pub use render_data_normal::RenderDataNormal;
 pub use render_object::RenderObject;
 pub use camera::Camera;
 pub use view_port::ViewPort;
+pub use material::Material;
 pub use misc::ShaderError;
 pub use misc::create_string_buffer;

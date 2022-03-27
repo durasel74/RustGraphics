@@ -34,7 +34,11 @@ impl ViewPort {
             let current_object = &render_objects[i];
             shader_program.set_uniform_matrix4("model", &current_object.transform_matrix());
             shader_program.set_uniform_matrix3("normalMatrix", &current_object.normal_matrix(view_matrix));
-            shader_program.set_uniform_vector("objectColor", &current_object.color());
+
+            shader_program.set_uniform_vector("material.ambient", &current_object.material().ambient);
+            shader_program.set_uniform_vector("material.diffuse", &current_object.material().diffuse);
+            shader_program.set_uniform_vector("material.specular", &current_object.material().specular);
+            shader_program.set_uniform_float("material.shininess", 32.0);
             // unsafe {
             //     gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
             //         gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
