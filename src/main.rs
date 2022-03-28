@@ -81,11 +81,13 @@ fn main() {
     for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         let mut new_material = Material::new();
-        new_material.ambient = generate_normal_vector();
+        new_material.ambient = generate_normal_vector() * 0.1;
         new_material.diffuse = generate_normal_vector();
         new_material.specular = generate_normal_vector();
+        new_object.set_shininess(generate_float());
         new_object.set_material(new_material);
         new_object.set_position(generate_vector());
+        new_object.set_scale(generate_float() / 100.0);
         render_objects.push(new_object);
     }
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
@@ -93,6 +95,7 @@ fn main() {
     new_material.ambient = generate_normal_vector();
     new_material.diffuse = generate_normal_vector();
     new_material.specular = generate_normal_vector();
+    rend_obj.set_shininess(generate_float());
     rend_obj.set_material(new_material);
     render_objects.push(rend_obj);
 
@@ -122,7 +125,7 @@ fn main() {
 
     let now = time::Instant::now();
     let mut old_since_time = now.elapsed().as_nanos();
-    let radius = 4.0;
+    let radius = 50.0;
 
     let mut is_fullscreen = false;
     let mut draw_mode = 0;
@@ -304,7 +307,7 @@ fn main() {
 
                 // Вращение по кругу
                 let elapsed_time = now.elapsed();
-                let rotate_value = (elapsed_time.as_millis() as f32) / 999.0;
+                let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
                 let camx = rotate_value.sin() * radius;
                 let camy = rotate_value.cos() * radius;
                 light.set_position(vec3(camx, (camx + camy) / 2.0, camy));
@@ -417,6 +420,12 @@ fn prompt_for_video_mode(monitor: &monitor::MonitorHandle) -> monitor::VideoMode
     monitor.video_modes().nth(0).unwrap()
 }
 
+fn generate_float() -> f32 {
+    let mut rng = rand::thread_rng();
+    let result = rng.gen_range(0.0..500.0);
+    return result;
+}
+
 fn generate_vector() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
     let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
@@ -425,6 +434,6 @@ fn generate_vector() -> Vector3<f32> {
 
 fn generate_normal_vector() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
-    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
+    let mut generator = || -> f32 { (rng.gen_range(0..1000) as f32) / 10.0 };
     vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0)
 }

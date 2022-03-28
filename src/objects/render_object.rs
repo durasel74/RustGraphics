@@ -6,6 +6,7 @@ use super::Material;
 pub struct RenderObject {
     mesh: Mesh,
     material: Material,
+    shininess: f32,
     position: Vector3<f32>,
     rotation: Vector3<f32>,
     scale: f32,
@@ -15,6 +16,7 @@ impl RenderObject {
         RenderObject { 
             mesh,
             material: Material::new(),
+            shininess: 0.0,
             position: vec3(0.0, 0.0, 0.0), 
             rotation: vec3(0.0, 0.0, 0.0), 
             scale: 1.0,
@@ -30,6 +32,8 @@ impl RenderObject {
     pub fn set_scale(&mut self, value: f32) { self.scale = value }
     pub fn material(&self) -> &Material { &self.material }
     pub fn set_material(&mut self, value: Material) { self.material = value; }
+    pub fn shininess(&self) -> f32 { self.shininess }
+    pub fn set_shininess(&mut self, value: f32) { self.shininess = value; }
 
     pub fn transform_matrix(&self) -> Matrix4<f32> {
         let pos_matrix = Matrix4::from_translation(self.position.clone());
