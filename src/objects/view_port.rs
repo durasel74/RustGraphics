@@ -35,9 +35,9 @@ impl ViewPort {
             shader_program.set_uniform_matrix4("model", &current_object.transform_matrix());
             shader_program.set_uniform_matrix3("normalMatrix", &current_object.normal_matrix(view_matrix));
 
-            shader_program.set_uniform_vector("material.ambient", &current_object.material().ambient);
-            shader_program.set_uniform_vector("material.diffuse", &current_object.material().diffuse);
-            shader_program.set_uniform_vector("material.specular", &current_object.material().specular);
+            // shader_program.set_uniform_vector("material.ambient", &current_object.material().ambient);
+            // shader_program.set_uniform_vector("material.diffuse", &current_object.material().diffuse);
+            // shader_program.set_uniform_vector("material.specular", &current_object.material().specular);
             shader_program.set_uniform_float("material.shininess", current_object.shininess());
             // unsafe {
             //     gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
@@ -47,7 +47,7 @@ impl ViewPort {
             unsafe {
                 gl::BindVertexArray(current_object.mesh().render_data().vao);
                 //gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
-                gl::DrawArrays(gl::TRIANGLES, 0, (current_object.mesh().vertices().len() / 6) as i32);
+                gl::DrawArrays(gl::TRIANGLES, 0, (current_object.mesh().vertices().len() / 8) as i32);
             }
         }
     }

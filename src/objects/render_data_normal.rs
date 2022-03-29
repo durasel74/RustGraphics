@@ -38,13 +38,18 @@ impl RenderDataNormal {
 
             gl::EnableVertexAttribArray(0);
             gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE,
-                (6 * std::mem::size_of::<f32>()) as GLint,
+                (8 * std::mem::size_of::<f32>()) as GLint,
                 std::ptr::null()
             );
             gl::EnableVertexAttribArray(1);
             gl::VertexAttribPointer(1, 3, gl::FLOAT, gl::FALSE,
-                (6 * std::mem::size_of::<f32>()) as GLint,
+                (8 * std::mem::size_of::<f32>()) as GLint,
                 (3 * std::mem::size_of::<f32>()) as *const GLvoid,
+            );
+            gl::EnableVertexAttribArray(2); 
+            gl::VertexAttribPointer(2, 2, gl::FLOAT, gl::FALSE, 
+                (8 * std::mem::size_of::<f32>()) as GLint, 
+                (6 * std::mem::size_of::<f32>()) as *const GLvoid
             );
 
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);

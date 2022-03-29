@@ -2,12 +2,12 @@
 
 layout (location = 0) in vec3 Position;
 layout (location = 1) in vec3 Normal;
-//layout (location = 2) in vec2 TexCoord;
+layout (location = 2) in vec2 TexCoord;
 
 out vec3 FragPos;
 out vec3 outNormal;
 out vec3 outLightPos;
-//out vec2 outTex;
+out vec2 outTex;
 
 uniform vec3 lightPos;
 uniform mat4 model;
@@ -21,5 +21,5 @@ void main()
     FragPos = vec3(view * model * vec4(Position, 1.0));
     outNormal = normalMatrix * Normal;
     outLightPos = vec3(view * vec4(lightPos, 1.0));
-    //outTex = TexCoord;
+    outTex = TexCoord;
 }

@@ -7,7 +7,7 @@ use std::path::Path;
 use std::time;
 use rand::Rng;
 use cgmath::prelude::InnerSpace;
-use cgmath::{ Rad, Matrix, Matrix4, Vector3, vec3, PerspectiveFov, Ortho };
+use cgmath::{ Matrix, Matrix4, Vector3, vec3 };
 use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, figures };
 
 use glutin;
@@ -44,8 +44,13 @@ fn main() {
     let mesh: Mesh = figures::normal_cube();
 
     // Загрузка текстур
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/container.jpg").to_str().unwrap());
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/container2.png").to_str().unwrap());
     let texture1 = match texture_loadresult {
+        Ok(texture) => texture,
+        Err(err) => { println!("{}", err); return }
+    };
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/container2_specular.png").to_str().unwrap());
+    let texture2 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
     };
@@ -81,10 +86,11 @@ fn main() {
     for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         let mut new_material = Material::new();
-        new_material.ambient = generate_normal_vector() * 0.1;
-        new_material.diffuse = generate_normal_vector();
-        new_material.specular = generate_normal_vector();
-        new_object.set_shininess(generate_float());
+        // new_material.ambient = generate_normal_vector();
+        // new_material.diffuse = generate_normal_vector();
+        // new_material.specular = generate_normal_vector();
+        // new_object.set_shininess(generate_float());
+        new_object.set_shininess(64.0);
         new_object.set_material(new_material);
         new_object.set_position(generate_vector());
         new_object.set_scale(generate_float() / 100.0);
@@ -92,9 +98,9 @@ fn main() {
     }
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
     let mut new_material = Material::new();
-    new_material.ambient = generate_normal_vector();
-    new_material.diffuse = generate_normal_vector();
-    new_material.specular = generate_normal_vector();
+    // new_material.ambient = generate_normal_vector();
+    // new_material.diffuse = generate_normal_vector();
+    // new_material.specular = generate_normal_vector();
     rend_obj.set_shininess(generate_float());
     rend_obj.set_material(new_material);
     render_objects.push(rend_obj);
@@ -103,9 +109,9 @@ fn main() {
     light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
     let mut light_material = Material::new();
-    // light_material.ambient = generate_normal_vector();
-    // light_material.diffuse = generate_normal_vector();
-    // light_material.specular = generate_normal_vector();
+    light_material.ambient = vec3(0.1, 0.1, 0.1);
+    light_material.diffuse = vec3(0.8, 0.8, 0.8);
+    light_material.specular = vec3(1.0, 1.0, 1.0);
     light.set_material(light_material);
 
     // let mult = 50;
@@ -131,6 +137,7 @@ fn main() {
     let mut draw_mode = 0;
     let sensitivity = 0.7;
     let mut camera_number = 0;
+    let mut is_look_at = false;
 
     let normal_speed_step = 0.004;
     let fast_speed_step = 0.007;
@@ -202,6 +209,8 @@ fn main() {
                             camera_number += 1;
                             if camera_number > 1 { camera_number = 0; }
                         },
+                        event::KeyboardInput { scancode: 38, state: event::ElementState::Released, .. } => 
+                            is_look_at = !is_look_at,
 
                         event::KeyboardInput { scancode: 17, state: event::ElementState::Released, ..} =>
                             forward = false,
@@ -239,7 +248,7 @@ fn main() {
                                 current_max_speed = max_fast_speed;
                             },
                         
-                        //event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
+                        // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                         _ => ()
                     },
 
@@ -263,8 +272,11 @@ fn main() {
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                     set_cullface_mode(draw_mode);
 
-                    // gl::ActiveTexture(gl::TEXTURE0);
-                    // gl::BindTexture(gl::TEXTURE_2D, texture1.id());
+                    gl::ActiveTexture(gl::TEXTURE0);
+                    gl::BindTexture(gl::TEXTURE_2D, texture1.id());
+
+                    gl::ActiveTexture(gl::TEXTURE1);
+                    gl::BindTexture(gl::TEXTURE_2D, texture2.id());
                 }
 
                 // Дельта времени
@@ -292,6 +304,7 @@ fn main() {
                 let direct_y = radians_pitch.sin();
                 let direct_z = radians_yaw.sin() * radians_pitch.cos();
 
+                camera.set_is_look_at(is_look_at);
                 if !camera.is_look_at() {
                     let direction = vec3(direct_x, direct_y, direct_z).normalize();
                     camera.set_direction(direction);
@@ -344,20 +357,16 @@ fn main() {
                 }
 
                 shader_program.use_();
-                //shader_program.set_uniform_int("texture1", 0);
                 shader_program.set_uniform_vector("lightPos", &light.position());
-
-                shader_program.set_uniform_vector("material.ambient", &vec3(1.0, 0.5, 0.31));
-                shader_program.set_uniform_vector("material.diffuse", &vec3(1.0, 0.5, 0.31));
-                shader_program.set_uniform_vector("material.specular", &vec3(0.5, 0.5, 0.5));
-                shader_program.set_uniform_float("material.shininess", 32.0);
-
                 shader_program.set_uniform_vector("light.ambient", &light.material().ambient);
                 shader_program.set_uniform_vector("light.diffuse", &light.material().diffuse);
                 shader_program.set_uniform_vector("light.specular", &light.material().specular);
 
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
+
+                shader_program.set_uniform_int("material.diffuse", 0);
+                shader_program.set_uniform_int("material.specular", 1);
 
                 view_port.draw(&shader_program, &mut camera, &render_objects);
 
