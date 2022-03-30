@@ -41,15 +41,50 @@ fn main() {
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    let mesh: Mesh = figures::normal_cube();
+    let mesh: Mesh = figures::ok();
 
     // Загрузка текстур
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/container2.png").to_str().unwrap());
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2.png").to_str().unwrap());
+    // let texture1 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2_specular.png").to_str().unwrap());
+    // let texture2 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2.png").to_str().unwrap());
+    // let texture1 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2_specular.png").to_str().unwrap());
+    // let light_map1 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/test.png").to_str().unwrap());
+    // let texture2 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/test.png").to_str().unwrap());
+    // let light_map2 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+
+    // black
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/1.png").to_str().unwrap());
     let texture1 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
     };
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/container2_specular.png").to_str().unwrap());
+    // ok
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/2.png").to_str().unwrap());
     let texture2 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
@@ -83,51 +118,60 @@ fn main() {
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
     let mut render_objects: Vec<RenderObject> = vec![];
-    for i in 1..500 {
-        let mut new_object = RenderObject::from_mesh(mesh.clone());
-        let mut new_material = Material::new();
-        // new_material.ambient = generate_normal_vector();
-        // new_material.diffuse = generate_normal_vector();
-        // new_material.specular = generate_normal_vector();
-        // new_object.set_shininess(generate_float());
-        new_object.set_shininess(64.0);
-        new_object.set_material(new_material);
-        new_object.set_position(generate_vector());
-        new_object.set_scale(generate_float() / 100.0);
-        render_objects.push(new_object);
-    }
-    let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    let mut new_material = Material::new();
-    // new_material.ambient = generate_normal_vector();
-    // new_material.diffuse = generate_normal_vector();
-    // new_material.specular = generate_normal_vector();
-    rend_obj.set_shininess(generate_float());
-    rend_obj.set_material(new_material);
-    render_objects.push(rend_obj);
+
+    // ----- Рандомные кубы ------
+    // for i in 1..500 {
+    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
+    //     let mut new_material = Material::new();
+    //     new_object.set_shininess(64.0);
+    //     new_object.set_material(new_material);
+    //     new_object.set_position(generate_vector());
+    //     new_object.set_scale(generate_float() / 100.0);
+    //     render_objects.push(new_object);
+    // }
+    // let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    // let mut new_material = Material::new();
+    // rend_obj.set_shininess(64.0);
+    // rend_obj.set_material(new_material);
+    // render_objects.push(rend_obj);
+    // -----------
+
+    // ----- Кубы с текстурами ------
+    // let mut cube1 = RenderObject::from_mesh(mesh.clone());
+    // cube1.set_shininess(64.0);
+    // cube1.set_texture(texture1);
+    // cube1.set_light_map(light_map1);
+    // render_objects.push(cube1);
+
+    // let mut cube2 = RenderObject::from_mesh(mesh.clone());
+    // cube2.set_position(vec3(3.0, 0.0, 0.0));
+    // cube2.set_shininess(64.0);
+    // cube2.set_texture(texture2);
+    // cube2.set_light_map(light_map2);
+    // render_objects.push(cube2);
+
+    let mut cube1 = RenderObject::from_mesh(mesh.clone());
+    cube1.set_shininess(64.0);
+    cube1.set_texture(texture2);
+    cube1.set_rotation(vec3(-15.0, 20.0, -10.0));
+    render_objects.push(cube1);
+
+    let mut cube2 = RenderObject::from_mesh(mesh.clone());
+    cube2.set_position(vec3(5.0, 5.0, -1.0));
+    cube2.set_shininess(64.0);
+    cube2.set_texture(texture1);
+    cube2.set_rotation(vec3(130.0, 40.0, -50.0));
+    render_objects.push(cube2);
+    // -----------
 
     let mut light = RenderObject::from_mesh(mesh.clone());
     light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
     let mut light_material = Material::new();
-    light_material.ambient = vec3(0.1, 0.1, 0.1);
-    light_material.diffuse = vec3(0.8, 0.8, 0.8);
+    light_material.ambient = vec3(0.7, 0.7, 0.7);
+    light_material.diffuse = vec3(0.9, 0.9, 0.9);
     light_material.specular = vec3(1.0, 1.0, 1.0);
     light.set_material(light_material);
-
-    // let mult = 50;
-    // for i in 1..10 {
-    //     for j in 1..10 {
-    //         for k in 1..10 {
-    //             let x = (i * mult) as f32;
-    //             let z = (j * mult) as f32;
-    //             let y = (k * mult) as f32;
-    //             let mut new_object = RenderObject::from_mesh(mesh.clone());
-    //             new_object.set_position(vec3(x, y, z));
-    //             new_object.set_scale(20.0);
-    //             render_objects.push(new_object);
-    //         }
-    //     }
-    // }
 
     let now = time::Instant::now();
     let mut old_since_time = now.elapsed().as_nanos();
@@ -161,7 +205,7 @@ fn main() {
 
     // Первоначальная настройка пайплайна
     unsafe { 
-        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+        gl::ClearColor(0.7, 0.7, 0.7, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
@@ -272,11 +316,11 @@ fn main() {
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                     set_cullface_mode(draw_mode);
 
-                    gl::ActiveTexture(gl::TEXTURE0);
-                    gl::BindTexture(gl::TEXTURE_2D, texture1.id());
+                    // gl::ActiveTexture(gl::TEXTURE0);
+                    // gl::BindTexture(gl::TEXTURE_2D, texture1.id());
 
-                    gl::ActiveTexture(gl::TEXTURE1);
-                    gl::BindTexture(gl::TEXTURE_2D, texture2.id());
+                    // gl::ActiveTexture(gl::TEXTURE1);
+                    // gl::BindTexture(gl::TEXTURE_2D, texture2.id());
                 }
 
                 // Дельта времени
@@ -413,7 +457,7 @@ fn to_draw_mode(value: u32) -> gl::types::GLenum {
 fn set_cullface_mode(value: u32) {
     unsafe {
         match value {
-            0 => gl::Enable(gl::CULL_FACE),
+            0 => gl::Disable(gl::CULL_FACE),
             1 => gl::Disable(gl::CULL_FACE),
             2 => gl::Disable(gl::CULL_FACE),
             _ => gl::Enable(gl::CULL_FACE)

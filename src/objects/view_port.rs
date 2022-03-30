@@ -45,6 +45,21 @@ impl ViewPort {
             // }
 
             unsafe {
+                match current_object.texture() {
+                    Some(texture) => {
+                        gl::ActiveTexture(gl::TEXTURE0);
+                        gl::BindTexture(gl::TEXTURE_2D, texture.id());
+                    },
+                    None => ()
+                }
+                match current_object.light_map() {
+                    Some(texture) => {
+                        gl::ActiveTexture(gl::TEXTURE1);
+                        gl::BindTexture(gl::TEXTURE_2D, texture.id());
+                    },
+                    None => ()
+                }
+
                 gl::BindVertexArray(current_object.mesh().render_data().vao);
                 //gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
                 gl::DrawArrays(gl::TRIANGLES, 0, (current_object.mesh().vertices().len() / 8) as i32);

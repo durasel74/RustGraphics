@@ -1,12 +1,13 @@
 use cgmath::{ Matrix, SquareMatrix, Matrix3, Matrix4, Vector3, vec3, Rad };
 use gl;
-use super::Mesh;
-use super::Material;
+use super::{ Mesh, Material, Texture};
 
 pub struct RenderObject {
     mesh: Mesh,
     material: Material,
     shininess: f32,
+    texture: Option<Texture>,
+    light_map: Option<Texture>,
     position: Vector3<f32>,
     rotation: Vector3<f32>,
     scale: f32,
@@ -17,6 +18,8 @@ impl RenderObject {
             mesh,
             material: Material::new(),
             shininess: 0.0,
+            texture: None,
+            light_map: None,
             position: vec3(0.0, 0.0, 0.0), 
             rotation: vec3(0.0, 0.0, 0.0), 
             scale: 1.0,
@@ -34,6 +37,11 @@ impl RenderObject {
     pub fn set_material(&mut self, value: Material) { self.material = value; }
     pub fn shininess(&self) -> f32 { self.shininess }
     pub fn set_shininess(&mut self, value: f32) { self.shininess = value; }
+
+    pub fn texture(&self) -> &Option<Texture> { &self.texture }
+    pub fn set_texture(&mut self, value: Texture) { self.texture = Some(value); }
+    pub fn light_map(&self) -> &Option<Texture> { &self.light_map }
+    pub fn set_light_map(&mut self, value: Texture) { self.light_map = Some(value); }
 
     pub fn transform_matrix(&self) -> Matrix4<f32> {
         let pos_matrix = Matrix4::from_translation(self.position.clone());
