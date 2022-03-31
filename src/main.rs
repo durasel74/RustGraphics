@@ -41,20 +41,9 @@ fn main() {
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
     // Загрузка модели
-    let mesh: Mesh = figures::ok();
+    let mesh: Mesh = figures::normal_cube();
 
     // Загрузка текстур
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2.png").to_str().unwrap());
-    // let texture1 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2_specular.png").to_str().unwrap());
-    // let texture2 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
-
     // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2.png").to_str().unwrap());
     // let texture1 = match texture_loadresult {
     //     Ok(texture) => texture,
@@ -66,26 +55,24 @@ fn main() {
     //     Err(err) => { println!("{}", err); return }
     // };
 
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/test.png").to_str().unwrap());
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/HitedCube.png").to_str().unwrap());
     // let texture2 = match texture_loadresult {
     //     Ok(texture) => texture,
     //     Err(err) => { println!("{}", err); return }
     // };
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/test.png").to_str().unwrap());
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/HitedCube.png").to_str().unwrap());
     // let light_map2 = match texture_loadresult {
     //     Ok(texture) => texture,
     //     Err(err) => { println!("{}", err); return }
     // };
 
-    // black
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/1.png").to_str().unwrap());
-    let texture1 = match texture_loadresult {
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
+    let texture3 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
     };
-    // ok
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/2.png").to_str().unwrap());
-    let texture2 = match texture_loadresult {
+    let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
+    let light_map3 = match texture_loadresult {
         Ok(texture) => texture,
         Err(err) => { println!("{}", err); return }
     };
@@ -120,24 +107,24 @@ fn main() {
     let mut render_objects: Vec<RenderObject> = vec![];
 
     // ----- Рандомные кубы ------
-    // for i in 1..500 {
-    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
-    //     let mut new_material = Material::new();
-    //     new_object.set_shininess(64.0);
-    //     new_object.set_material(new_material);
-    //     new_object.set_position(generate_vector());
-    //     new_object.set_scale(generate_float() / 100.0);
-    //     render_objects.push(new_object);
-    // }
-    // let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    // let mut new_material = Material::new();
-    // rend_obj.set_shininess(64.0);
-    // rend_obj.set_material(new_material);
-    // render_objects.push(rend_obj);
+    for i in 1..500 {
+        let mut new_object = RenderObject::from_mesh(mesh.clone());
+        new_object.set_texture(texture3.clone());
+        new_object.set_shininess(64.0);
+        new_object.set_position(generate_vector());
+        new_object.set_scale(generate_float() / 100.0);
+        render_objects.push(new_object);
+    }
+    let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    let mut new_material = Material::new();
+    rend_obj.set_shininess(64.0);
+    rend_obj.set_material(new_material);
+    render_objects.push(rend_obj);
     // -----------
 
     // ----- Кубы с текстурами ------
     // let mut cube1 = RenderObject::from_mesh(mesh.clone());
+    // cube1.set_position(vec3(-3.0, 0.0, 0.0));
     // cube1.set_shininess(64.0);
     // cube1.set_texture(texture1);
     // cube1.set_light_map(light_map1);
@@ -150,26 +137,20 @@ fn main() {
     // cube2.set_light_map(light_map2);
     // render_objects.push(cube2);
 
-    let mut cube1 = RenderObject::from_mesh(mesh.clone());
-    cube1.set_shininess(64.0);
-    cube1.set_texture(texture2);
-    cube1.set_rotation(vec3(-15.0, 20.0, -10.0));
-    render_objects.push(cube1);
-
-    let mut cube2 = RenderObject::from_mesh(mesh.clone());
-    cube2.set_position(vec3(5.0, 5.0, -1.0));
-    cube2.set_shininess(64.0);
-    cube2.set_texture(texture1);
-    cube2.set_rotation(vec3(130.0, 40.0, -50.0));
-    render_objects.push(cube2);
+    // let mut cube3 = RenderObject::from_mesh(mesh.clone());
+    // cube3.set_position(vec3(0.0, 0.0, 0.0));
+    // cube3.set_shininess(8.0);
+    // cube3.set_texture(texture3);
+    // cube3.set_light_map(light_map3);
+    // render_objects.push(cube3);
     // -----------
 
     let mut light = RenderObject::from_mesh(mesh.clone());
     light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
     let mut light_material = Material::new();
-    light_material.ambient = vec3(0.7, 0.7, 0.7);
-    light_material.diffuse = vec3(0.9, 0.9, 0.9);
+    light_material.ambient = vec3(0.2, 0.2, 0.2);
+    light_material.diffuse = vec3(0.7, 0.7, 0.7);
     light_material.specular = vec3(1.0, 1.0, 1.0);
     light.set_material(light_material);
 
@@ -205,7 +186,7 @@ fn main() {
 
     // Первоначальная настройка пайплайна
     unsafe { 
-        gl::ClearColor(0.7, 0.7, 0.7, 1.0);
+        gl::ClearColor(0.2, 0.2, 0.2, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
@@ -457,7 +438,7 @@ fn to_draw_mode(value: u32) -> gl::types::GLenum {
 fn set_cullface_mode(value: u32) {
     unsafe {
         match value {
-            0 => gl::Disable(gl::CULL_FACE),
+            0 => gl::Enable(gl::CULL_FACE),
             1 => gl::Disable(gl::CULL_FACE),
             2 => gl::Disable(gl::CULL_FACE),
             _ => gl::Enable(gl::CULL_FACE)
