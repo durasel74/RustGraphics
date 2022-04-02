@@ -8,6 +8,7 @@ mod render_object;
 mod camera;
 mod view_port;
 mod material;
+mod light;
 mod misc;
 pub mod figures;
 
@@ -21,5 +22,6 @@ pub use render_object::RenderObject;
 pub use camera::Camera;
 pub use view_port::ViewPort;
 pub use material::Material;
+pub use light::Light;
 pub use misc::ShaderError;
 pub use misc::create_string_buffer;

@@ -8,7 +8,7 @@ use std::time;
 use rand::Rng;
 use cgmath::prelude::InnerSpace;
 use cgmath::{ Matrix, Matrix4, Vector3, vec3 };
-use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, figures };
+use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, Light, figures };
 
 use glutin;
 use glutin::window;
@@ -44,28 +44,6 @@ fn main() {
     let mesh: Mesh = figures::normal_cube();
 
     // Загрузка текстур
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2.png").to_str().unwrap());
-    // let texture1 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/container2_specular.png").to_str().unwrap());
-    // let light_map1 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
-
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/HitedCube.png").to_str().unwrap());
-    // let texture2 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/HitedCube.png").to_str().unwrap());
-    // let light_map2 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
-
     let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
     let texture3 = match texture_loadresult {
         Ok(texture) => texture,
@@ -122,37 +100,14 @@ fn main() {
     render_objects.push(rend_obj);
     // -----------
 
-    // ----- Кубы с текстурами ------
-    // let mut cube1 = RenderObject::from_mesh(mesh.clone());
-    // cube1.set_position(vec3(-3.0, 0.0, 0.0));
-    // cube1.set_shininess(64.0);
-    // cube1.set_texture(texture1);
-    // cube1.set_light_map(light_map1);
-    // render_objects.push(cube1);
-
-    // let mut cube2 = RenderObject::from_mesh(mesh.clone());
-    // cube2.set_position(vec3(3.0, 0.0, 0.0));
-    // cube2.set_shininess(64.0);
-    // cube2.set_texture(texture2);
-    // cube2.set_light_map(light_map2);
-    // render_objects.push(cube2);
-
-    // let mut cube3 = RenderObject::from_mesh(mesh.clone());
-    // cube3.set_position(vec3(0.0, 0.0, 0.0));
-    // cube3.set_shininess(8.0);
-    // cube3.set_texture(texture3);
-    // cube3.set_light_map(light_map3);
-    // render_objects.push(cube3);
-    // -----------
-
-    let mut light = RenderObject::from_mesh(mesh.clone());
+    let mut light = Light::new();
     light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
-    let mut light_material = Material::new();
-    light_material.ambient = vec3(0.2, 0.2, 0.2);
-    light_material.diffuse = vec3(0.7, 0.7, 0.7);
-    light_material.specular = vec3(1.0, 1.0, 1.0);
-    light.set_material(light_material);
+    light.set_ambient(vec3(0.2, 0.2, 0.2));
+    light.set_diffuse(vec3(0.7, 0.7, 0.7));
+    light.set_specular(vec3(1.0, 1.0, 1.0));
+    light.set_mesh(mesh.clone());
+
 
     let now = time::Instant::now();
     let mut old_since_time = now.elapsed().as_nanos();
@@ -296,12 +251,6 @@ fn main() {
                     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                     set_cullface_mode(draw_mode);
-
-                    // gl::ActiveTexture(gl::TEXTURE0);
-                    // gl::BindTexture(gl::TEXTURE_2D, texture1.id());
-
-                    // gl::ActiveTexture(gl::TEXTURE1);
-                    // gl::BindTexture(gl::TEXTURE_2D, texture2.id());
                 }
 
                 // Дельта времени
@@ -383,9 +332,9 @@ fn main() {
 
                 shader_program.use_();
                 shader_program.set_uniform_vector("lightPos", &light.position());
-                shader_program.set_uniform_vector("light.ambient", &light.material().ambient);
-                shader_program.set_uniform_vector("light.diffuse", &light.material().diffuse);
-                shader_program.set_uniform_vector("light.specular", &light.material().specular);
+                shader_program.set_uniform_vector("light.ambient", &light.ambient());
+                shader_program.set_uniform_vector("light.diffuse", &light.diffuse());
+                shader_program.set_uniform_vector("light.specular", &light.specular());
 
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
@@ -393,20 +342,7 @@ fn main() {
                 shader_program.set_uniform_int("material.diffuse", 0);
                 shader_program.set_uniform_int("material.specular", 1);
 
-                view_port.draw(&shader_program, &mut camera, &render_objects);
-
-                ///////////////////////////
-                light_shader_program.use_();
-                light_shader_program.set_uniform_matrix4("view", &camera.view_matrix());
-                light_shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
-
-                light_shader_program.set_uniform_matrix4("model", &light.transform_matrix());
-                light_shader_program.set_uniform_vector("lightColor", &light.material().diffuse);
-                unsafe {
-                    gl::BindVertexArray(light.mesh().render_data().vao);
-                    //gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
-                    gl::DrawArrays(gl::TRIANGLES, 0, light.mesh().vertices().len() as i32);
-                }
+                view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light);
                 windowed_context.swap_buffers().unwrap();
             }
             _ => (),
