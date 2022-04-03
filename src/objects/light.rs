@@ -1,16 +1,23 @@
 use cgmath::{ Matrix, SquareMatrix, Matrix3, Matrix4, Vector3, vec3, Rad };
 use super::{ Mesh };
 
+pub enum LightType {
+    Directional,
+    Point,
+}
+
 pub struct Light {
     position: Vector3<f32>,
     rotation: Vector3<f32>,
     scale: f32,
 
+    direction: Vector3<f32>,
     ambient: Vector3<f32>,
     diffuse: Vector3<f32>,
     specular: Vector3<f32>,
 
     mesh: Option<Mesh>,
+    light_type: LightType,
 }
 impl Light {
     pub fn new() -> Self {
@@ -19,11 +26,13 @@ impl Light {
             rotation: vec3(0.0, 0.0, 0.0),
             scale: 1.0,
 
+            direction: vec3(0.0, 0.0, 0.0),
             ambient: vec3(0.0, 0.0, 0.0),
             diffuse: vec3(0.0, 0.0, 0.0),
             specular: vec3(0.0, 0.0, 0.0),
 
             mesh: None,
+            light_type: LightType::Directional,
         }
     }
 
@@ -34,6 +43,8 @@ impl Light {
     pub fn scale(&self) -> f32 { self.scale }
     pub fn set_scale(&mut self, value: f32) { self.scale = value }
 
+    pub fn direction(&self) -> Vector3<f32> { self.direction }
+    pub fn set_direction(&mut self, value: Vector3<f32>) { self.direction = value; }
     pub fn ambient(&self) -> Vector3<f32> { self.ambient }
     pub fn set_ambient(&mut self, value: Vector3<f32>) { self.ambient = value; }
     pub fn diffuse(&self) -> Vector3<f32> { self.diffuse }
@@ -43,6 +54,8 @@ impl Light {
 
     pub fn mesh(&self) -> &Option<Mesh> { &self.mesh }
     pub fn set_mesh(&mut self, value: Mesh) { self.mesh = Some(value); }
+    pub fn light_type(&self) -> &LightType { &self.light_type }
+    pub fn set_light_type(&mut self, value: LightType) { self.light_type = value; }
 
     pub fn transform_matrix(&self) -> Matrix4<f32> {
         let pos_matrix = Matrix4::from_translation(self.position.clone());

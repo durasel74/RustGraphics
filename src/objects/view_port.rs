@@ -76,7 +76,7 @@ impl ViewPort {
         for i in 0..1 {
             let current_light = light;
             light_shader_program.set_uniform_matrix4("model", &current_light.transform_matrix());
-            light_shader_program.set_uniform_vector("lightColor", &current_light.diffuse());
+            light_shader_program.set_uniform_vector3("lightColor", &current_light.specular());
 
             match current_light.mesh() {
                 Some(mesh) => {

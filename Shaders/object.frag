@@ -14,16 +14,14 @@ struct Light {
 
 in vec3 FragPos;
 in vec3 outNormal;
-in vec3 outLightPos;
+in vec4 outLightVector;
 in vec2 outTex;
 
 out vec4 resultColor;
 
 uniform Material material;
 uniform Light light;
-
 uniform int wire_mode;
-//uniform sampler2D texture1;
 
 void main()
 {
@@ -33,9 +31,11 @@ void main()
         vec3 ambient = light.ambient * vec3(texture(material.diffuse, outTex));
         // vec3 ambient = light.ambient * material.ambient;
         
-        // diffuse 
+        // diffuse
         vec3 norm = normalize(outNormal);
-        vec3 lightDir = normalize(outLightPos - FragPos);
+        float posMode = outLightVector.w;
+        vec3 lightDir = normalize(vec3((-1 + posMode * 2) * outLightVector) - FragPos * posMode);
+        // vec3 lightDir = normalize(outLightPos - FragPos);
         float diff = max(dot(norm, lightDir), 0.0);
         vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, outTex));
         // vec3 diffuse = light.diffuse * (diff * material.diffuse);

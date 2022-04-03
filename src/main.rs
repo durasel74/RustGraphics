@@ -7,8 +7,8 @@ use std::path::Path;
 use std::time;
 use rand::Rng;
 use cgmath::prelude::InnerSpace;
-use cgmath::{ Matrix, Matrix4, Vector3, vec3 };
-use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, Light, figures };
+use cgmath::{ Matrix, Matrix4, Vector3, Vector4, vec3, vec4 };
+use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, Light, LightType, figures };
 
 use glutin;
 use glutin::window;
@@ -88,26 +88,25 @@ fn main() {
     for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         new_object.set_texture(texture3.clone());
-        new_object.set_shininess(64.0);
+        new_object.set_shininess(32.0);
         new_object.set_position(generate_vector());
         new_object.set_scale(generate_float() / 100.0);
         render_objects.push(new_object);
     }
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    let mut new_material = Material::new();
-    rend_obj.set_shininess(64.0);
-    rend_obj.set_material(new_material);
+    rend_obj.set_shininess(32.0);
     render_objects.push(rend_obj);
     // -----------
 
     let mut light = Light::new();
     light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
+    light.set_direction(vec3(-1.0, -0.7, 0.5));
     light.set_ambient(vec3(0.2, 0.2, 0.2));
-    light.set_diffuse(vec3(0.7, 0.7, 0.7));
+    light.set_diffuse(vec3(0.6, 0.6, 0.6));
     light.set_specular(vec3(1.0, 1.0, 1.0));
     light.set_mesh(mesh.clone());
-
+    light.set_light_type(LightType::Directional);
 
     let now = time::Instant::now();
     let mut old_since_time = now.elapsed().as_nanos();
@@ -331,10 +330,15 @@ fn main() {
                 }
 
                 shader_program.use_();
-                shader_program.set_uniform_vector("lightPos", &light.position());
-                shader_program.set_uniform_vector("light.ambient", &light.ambient());
-                shader_program.set_uniform_vector("light.diffuse", &light.diffuse());
-                shader_program.set_uniform_vector("light.specular", &light.specular());
+                if let LightType::Directional = light.light_type() {
+                    shader_program.set_uniform_vector4("lightVector", &light.direction().extend(0.0));
+                }
+                else {
+                    shader_program.set_uniform_vector4("lightVector", &light.position().extend(1.0));
+                }
+                shader_program.set_uniform_vector3("light.ambient", &light.ambient());
+                shader_program.set_uniform_vector3("light.diffuse", &light.diffuse());
+                shader_program.set_uniform_vector3("light.specular", &light.specular());
 
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }

@@ -23,5 +23,6 @@ pub use camera::Camera;
 pub use view_port::ViewPort;
 pub use material::Material;
 pub use light::Light;
+pub use light::LightType;
 pub use misc::ShaderError;
 pub use misc::create_string_buffer;
