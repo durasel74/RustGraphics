@@ -6,10 +6,12 @@ layout (location = 2) in vec2 TexCoord;
 
 out vec3 FragPos;
 out vec3 outNormal;
-out vec4 outLightVector;
+out vec4 outLightPos;
+out vec3 outLightDirection;
 out vec2 outTex;
 
-uniform vec4 lightVector;
+uniform vec4 lightPos;
+uniform vec3 lightDirection;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -20,6 +22,7 @@ void main()
     gl_Position = projection * view * model * vec4(Position, 1.0);
     FragPos = vec3(view * model * vec4(Position, 1.0));
     outNormal = normalMatrix * Normal;
-    outLightVector = view * lightVector;
+    outLightPos = view * lightPos;
+    outLightDirection = vec3(view * vec4(lightDirection, 0.0));
     outTex = TexCoord;
 }

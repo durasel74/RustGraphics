@@ -10,11 +10,13 @@ pub struct Light {
     position: Vector3<f32>,
     rotation: Vector3<f32>,
     scale: f32,
-
     direction: Vector3<f32>,
+
     ambient: Vector3<f32>,
     diffuse: Vector3<f32>,
     specular: Vector3<f32>,
+    cut_off: f32,
+    outer_cut_off: f32,
 
     mesh: Option<Mesh>,
     light_type: LightType,
@@ -25,11 +27,13 @@ impl Light {
             position: vec3(0.0, 0.0, 0.0),
             rotation: vec3(0.0, 0.0, 0.0),
             scale: 1.0,
-
             direction: vec3(0.0, 0.0, 0.0),
+
             ambient: vec3(0.0, 0.0, 0.0),
             diffuse: vec3(0.0, 0.0, 0.0),
             specular: vec3(0.0, 0.0, 0.0),
+            cut_off: 0.0,
+            outer_cut_off: 0.0,
 
             mesh: None,
             light_type: LightType::Directional,
@@ -42,15 +46,19 @@ impl Light {
     pub fn set_rotation(&mut self, value: Vector3<f32>) { self.rotation = value } 
     pub fn scale(&self) -> f32 { self.scale }
     pub fn set_scale(&mut self, value: f32) { self.scale = value }
-
     pub fn direction(&self) -> Vector3<f32> { self.direction }
     pub fn set_direction(&mut self, value: Vector3<f32>) { self.direction = value; }
+
     pub fn ambient(&self) -> Vector3<f32> { self.ambient }
     pub fn set_ambient(&mut self, value: Vector3<f32>) { self.ambient = value; }
     pub fn diffuse(&self) -> Vector3<f32> { self.diffuse }
     pub fn set_diffuse(&mut self, value: Vector3<f32>) { self.diffuse = value; }
     pub fn specular(&self) -> Vector3<f32> { self.specular }
     pub fn set_specular(&mut self, value: Vector3<f32>) { self.specular = value; }
+    pub fn cut_off(&self) -> f32 { self.cut_off }
+    pub fn set_cut_off(&mut self, value: f32) { self.cut_off = value; }
+    pub fn outer_cut_off(&self) -> f32 { self.outer_cut_off }
+    pub fn set_outer_cut_off(&mut self, value: f32) { self.outer_cut_off = value; }
 
     pub fn mesh(&self) -> &Option<Mesh> { &self.mesh }
     pub fn set_mesh(&mut self, value: Mesh) { self.mesh = Some(value); }
