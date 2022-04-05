@@ -101,12 +101,19 @@ fn main() {
     let mut light = Light::new();
     light.set_position(vec3(4.0, 3.0, 2.0));
     light.set_scale(0.2);
+
     light.set_direction(vec3(-1.0, -0.7, 0.5));
     light.set_ambient(vec3(0.0, 0.0, 0.0));
-    light.set_diffuse(vec3(0.3, 0.3, 0.8));
-    light.set_specular(vec3(0.5, 0.5, 1.0));
+    light.set_diffuse(vec3(0.8, 0.8, 0.8));
+    light.set_specular(vec3(1.0, 1.0, 1.0));
+
+    light.set_constant(1.0);
+    light.set_linear(0.014);
+    light.set_quadratic(0.0007);
+
     light.set_cut_off(20.0);
     light.set_outer_cut_off(30.0);
+    
     light.set_mesh(mesh.clone());
     light.set_light_type(LightType::Point);
 
@@ -302,7 +309,8 @@ fn main() {
                 let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
                 let camx = rotate_value.sin() * radius;
                 let camy = rotate_value.cos() * radius;
-                light.set_direction(vec3(camx, (camx + camy) / 2.0, camy));
+                light.set_position(vec3(camx, (camx + camy) / 2.0, camy));
+                // light.set_direction(vec3(camx, (camx + camy) / 2.0, camy));
 
                 let mut matrix = Matrix4::from_scale(1.0);
                 if forward || back || right || left || up || down {
@@ -336,23 +344,7 @@ fn main() {
                 }
 
                 shader_program.use_();
-                if let LightType::Directional = light.light_type() {
-                    shader_program.set_uniform_vector4("lightPos", &light.position().extend(0.0));
-                }
-                else {
-                    shader_program.set_uniform_vector4("lightPos", &light.position().extend(1.0));
-                }
-                shader_program.set_uniform_vector3("lightDirection", &light.direction());
-
-                shader_program.set_uniform_float("light.cutOff", light.cut_off().to_radians().cos());
-                shader_program.set_uniform_float("light.outerCutOff", light.outer_cut_off().to_radians().cos());
-                shader_program.set_uniform_vector3("light.ambient", &light.ambient());
-                shader_program.set_uniform_vector3("light.diffuse", &light.diffuse());
-                shader_program.set_uniform_vector3("light.specular", &light.specular());
-
-                shader_program.set_uniform_float("light.constant", 1.0);
-                shader_program.set_uniform_float("light.linear", 0.014);
-                shader_program.set_uniform_float("light.quadratic", 0.0007);
+                light.configure_shader(&shader_program);
 
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
