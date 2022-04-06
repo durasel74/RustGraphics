@@ -93,41 +93,41 @@ impl Light {
         pos_matrix * rot_matrix * sca_matrix
     }
 
-    pub fn configure_shader(&self, shader_program: &ShaderProgram) {
+    pub fn configure_shader(&self, shader_program: &ShaderProgram, field_name: &str) {
         match self.light_type {
-            LightType::Directional => self.configure_shader_directional(shader_program),
-            LightType::Point => self.configure_shader_point(shader_program),
-            LightType::Spotlight => self.configure_shader_spot(shader_program),
+            LightType::Directional => self.configure_shader_directional(shader_program, field_name),
+            LightType::Point => self.configure_shader_point(shader_program, field_name),
+            LightType::Spotlight => self.configure_shader_spot(shader_program, field_name),
         }
     }
 
-    fn configure_shader_directional(&self, shader_program: &ShaderProgram) {
-        shader_program.set_uniform_vector3("dirLight.ambient", &self.ambient());
-        shader_program.set_uniform_vector3("dirLight.diffuse", &self.diffuse());
-        shader_program.set_uniform_vector3("dirLight.specular", &self.specular());
+    fn configure_shader_directional(&self, shader_program: &ShaderProgram, field_name: &str) {
+        shader_program.set_uniform_vector3(&format!("{}.ambient", field_name), &self.ambient());
+        shader_program.set_uniform_vector3(&format!("{}.diffuse", field_name), &self.diffuse());
+        shader_program.set_uniform_vector3(&format!("{}.specular", field_name), &self.specular());
         
-        shader_program.set_uniform_vector3("dirLight.direction", &self.direction());
+        shader_program.set_uniform_vector3(&format!("{}.direction", field_name), &self.direction());
     }
 
-    fn configure_shader_point(&self, shader_program: &ShaderProgram) {
-        shader_program.set_uniform_vector3("pointLight.ambient", &self.ambient());
-        shader_program.set_uniform_vector3("pointLight.diffuse", &self.diffuse());
-        shader_program.set_uniform_vector3("pointLight.specular", &self.specular());
+    fn configure_shader_point(&self, shader_program: &ShaderProgram, field_name: &str) {
+        shader_program.set_uniform_vector3(&format!("{}.ambient", field_name), &self.ambient());
+        shader_program.set_uniform_vector3(&format!("{}.diffuse", field_name), &self.diffuse());
+        shader_program.set_uniform_vector3(&format!("{}.specular", field_name), &self.specular());
 
-        shader_program.set_uniform_vector3("pointLight.position", &self.position());
-        shader_program.set_uniform_float("pointLight.constant", self.constant());
-        shader_program.set_uniform_float("pointLight.linear", self.linear());
-        shader_program.set_uniform_float("pointLight.quadratic", self.quadratic());
+        shader_program.set_uniform_vector3(&format!("{}.position", field_name), &self.position());
+        shader_program.set_uniform_float(&format!("{}.constant", field_name), self.constant());
+        shader_program.set_uniform_float(&format!("{}.linear", field_name), self.linear());
+        shader_program.set_uniform_float(&format!("{}.quadratic", field_name), self.quadratic());
     }
 
-    fn configure_shader_spot(&self, shader_program: &ShaderProgram) {
-        shader_program.set_uniform_vector3("spotLight.ambient", &self.ambient());
-        shader_program.set_uniform_vector3("spotLight.diffuse", &self.diffuse());
-        shader_program.set_uniform_vector3("spotLight.specular", &self.specular());
+    fn configure_shader_spot(&self, shader_program: &ShaderProgram, field_name: &str) {
+        shader_program.set_uniform_vector3(&format!("{}.ambient", field_name), &self.ambient());
+        shader_program.set_uniform_vector3(&format!("{}.diffuse", field_name), &self.diffuse());
+        shader_program.set_uniform_vector3(&format!("{}.specular", field_name), &self.specular());
 
-        shader_program.set_uniform_vector3("spotLight.position", &self.position());
-        shader_program.set_uniform_vector3("spotLight.direction", &self.direction());
-        shader_program.set_uniform_float("spotLight.cutOff", self.cut_off().to_radians().cos());
-        shader_program.set_uniform_float("spotLight.outerCutOff", self.outer_cut_off().to_radians().cos());
+        shader_program.set_uniform_vector3(&format!("{}.position", field_name), &self.position());
+        shader_program.set_uniform_vector3(&format!("{}.direction", field_name), &self.direction());
+        shader_program.set_uniform_float(&format!("{}.cutOff", field_name), self.cut_off().to_radians().cos());
+        shader_program.set_uniform_float(&format!("{}.outerCutOff", field_name), self.outer_cut_off().to_radians().cos());
     }
 }

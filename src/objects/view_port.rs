@@ -1,5 +1,6 @@
 use gl;
-use super::{ RenderObject, ShaderProgram, Camera, Light };
+use cgmath::{ Vector3, vec3 };
+use super::{ RenderObject, ShaderProgram, Camera, Light, LightType };
 
 pub struct ViewPort {
     position: (i32, i32),
@@ -21,15 +22,16 @@ impl ViewPort {
     pub fn set_size(&mut self, value: (i32, i32)) { self.size = value; }
 
     pub fn draw(&self, shader_program: &ShaderProgram, light_shader_program: &ShaderProgram,
-    camera: &mut Camera, render_objects: &Vec<RenderObject>, light: &Light) {
+    camera: &mut Camera, render_objects: &Vec<RenderObject>, light_objects: &Vec<Light>) {
         unsafe { gl::Viewport(self.position.0, self.position.1, self.size.0, self.size.1); }
         camera.set_view_size((self.size.0 as f32, self.size.1 as f32));
-        self.draw_render_objects(shader_program, camera, render_objects);
-        self.draw_light_objects(light_shader_program, camera, light);
+        self.configure_light(shader_program, light_objects);
+        self.draw_render_objects(shader_program, camera, render_objects, light_objects);
+        self.draw_light_objects(light_shader_program, camera, light_objects);
     }
 
     fn draw_render_objects(&self, shader_program: &ShaderProgram, camera: &mut Camera, 
-    render_objects: &Vec<RenderObject>) {
+    render_objects: &Vec<RenderObject>, light_objects: &Vec<Light>) {
         shader_program.set_uniform_matrix4("view", &camera.view_matrix());
         shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
 
@@ -68,15 +70,18 @@ impl ViewPort {
     }
 
     fn draw_light_objects(&self, light_shader_program: &ShaderProgram, 
-    camera: &mut Camera, light: &Light) {
+    camera: &mut Camera, light_objects: &Vec<Light>) {
         light_shader_program.use_();
         light_shader_program.set_uniform_matrix4("view", &camera.view_matrix());
         light_shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
 
-        for i in 0..1 {
-            let current_light = light;
+        for i in 0..light_objects.len() {
+            let current_light = &light_objects[i];
             light_shader_program.set_uniform_matrix4("model", &current_light.transform_matrix());
-            light_shader_program.set_uniform_vector3("lightColor", &current_light.specular());
+            let diff_color = current_light.diffuse();
+            let spec_color = current_light.specular();
+            let res_color = vec3(diff_color.x * spec_color.x, diff_color.y * spec_color.y, diff_color.z * spec_color.z);
+            light_shader_program.set_uniform_vector3("lightColor", &res_color);
 
             match current_light.mesh() {
                 Some(mesh) => {
@@ -88,6 +93,35 @@ impl ViewPort {
                 _ => (),
             }
         }
+    }
+
+    fn configure_light(&self, shader_program: &ShaderProgram, light_objects: &Vec<Light>) {
+        let mut dir_light_count = 0;
+        let mut point_light_count = 0;
+        let mut spot_light_count = 0;
+
+        for i in 0..light_objects.len() {
+            let current_light = &light_objects[i];
+            let field_name: String;
+            match current_light.light_type() {
+                LightType::Directional => {
+                    field_name = format!("dirLights[{}]", dir_light_count);
+                    dir_light_count += 1;
+                },
+                LightType::Point => {
+                    field_name = format!("pointLights[{}]", point_light_count);
+                    point_light_count += 1;
+                },
+                LightType::Spotlight => {
+                    field_name = format!("spotLights[{}]", spot_light_count);
+                    spot_light_count += 1;
+                }
+            }
+            current_light.configure_shader(shader_program, &field_name);
+        }
+        shader_program.set_uniform_int("dirLightCount", dir_light_count);
+        shader_program.set_uniform_int("pointLightCount", point_light_count);
+        shader_program.set_uniform_int("spotLightCount", spot_light_count);
     }
 
 }

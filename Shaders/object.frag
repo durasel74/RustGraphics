@@ -42,12 +42,17 @@ in mat4 View;
 
 out vec4 FragColor;
 
+#define DIR_LIGHT_COUNT 5
+#define POINT_LIGHT_COUNT 50
+#define SPOT_LIGHT_COUNT 5
+
 uniform Material material;
-uniform DirLight dirLight;
-uniform PointLight pointLight;
-// #define NR_POINT_LIGHTS 4
-// uniform PointLight pointLights[NR_POINT_LIGHTS];
-uniform SpotLight spotLight;
+uniform DirLight dirLights[DIR_LIGHT_COUNT];
+uniform PointLight pointLights[POINT_LIGHT_COUNT];
+uniform SpotLight spotLights[SPOT_LIGHT_COUNT];
+uniform int dirLightCount;
+uniform int pointLightCount;
+uniform int spotLightCount;
 uniform int wire_mode;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
@@ -62,18 +67,12 @@ void main()
         vec3 viewDir = normalize(-FragPos);
 
         vec3 result = vec3(0.0f, 0.0f, 0.0f);
-        // result += CalcDirLight(dirLight, norm, viewDir);
-        result += CalcPointLight(pointLight, norm, FragPos, viewDir); 
-        // result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
-
-
-        // phase 2: Point lights
-        // for(int i = 0; i < NR_POINT_LIGHTS; i++)
-        //     result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
-
-        // phase 3: Spot light
-        //result += CalcSpotLight(spotLight, norm, FragPos, viewDir);    
-        
+        for(int i = 0; i < dirLightCount; i++)
+            result += CalcDirLight(dirLights[i], norm, viewDir);
+        for(int i = 0; i < pointLightCount; i++)
+            result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
+        for(int i = 0; i < spotLightCount; i++)
+            result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
         FragColor = vec4(result, 1.0);
     }
     else FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);

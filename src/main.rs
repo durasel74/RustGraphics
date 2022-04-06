@@ -82,9 +82,12 @@ fn main() {
     camera.set_is_ortho(false);
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
-    let mut render_objects: Vec<RenderObject> = vec![];
-
     // ----- Рандомные кубы ------
+    let mut render_objects: Vec<RenderObject> = vec![];
+    let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    rend_obj.set_shininess(32.0);
+    render_objects.push(rend_obj);
+    
     for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         new_object.set_texture(texture3.clone());
@@ -93,29 +96,39 @@ fn main() {
         new_object.set_scale(generate_float() / 100.0);
         render_objects.push(new_object);
     }
-    let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    rend_obj.set_shininess(32.0);
-    render_objects.push(rend_obj);
-    // -----------
+    // ---------------------------------------------------
 
-    let mut light = Light::new();
-    light.set_position(vec3(4.0, 3.0, 2.0));
-    light.set_scale(0.2);
 
-    light.set_direction(vec3(-1.0, -0.7, 0.5));
-    light.set_ambient(vec3(0.0, 0.0, 0.0));
-    light.set_diffuse(vec3(0.8, 0.8, 0.8));
-    light.set_specular(vec3(1.0, 1.0, 1.0));
+    // ----- Рандомные светильники ------
+    let mut light_objects: Vec<Light> = vec![];
+    let mut light_obj = Light::new();
+    light_obj.set_direction(vec3(1.0, 0.0, 0.0));
+    light_obj.set_ambient(vec3(0.0, 0.0, 0.0));
+    light_obj.set_diffuse(vec3(0.2, 0.2, 0.2));
+    light_obj.set_specular(vec3(0.0, 0.0, 0.0));
+    light_obj.set_cut_off(5.0);
+    light_obj.set_outer_cut_off(20.0);
+    light_obj.set_light_type(LightType::Spotlight);
+    light_objects.push(light_obj);
 
-    light.set_constant(1.0);
-    light.set_linear(0.014);
-    light.set_quadratic(0.0007);
+    for i in 1..50 {
+        let mut new_object = Light::new();
+        new_object.set_position(generate_vector());
+        new_object.set_scale(0.2);
 
-    light.set_cut_off(20.0);
-    light.set_outer_cut_off(30.0);
-    
-    light.set_mesh(mesh.clone());
-    light.set_light_type(LightType::Point);
+        new_object.set_ambient(generate_normal_vector());
+        new_object.set_diffuse(generate_normal_vector());
+        new_object.set_specular(generate_normal_vector());
+
+        new_object.set_constant(1.0);
+        new_object.set_linear(0.09);
+        new_object.set_quadratic(0.032);
+        
+        new_object.set_light_type(LightType::Point);
+        new_object.set_mesh(mesh.clone());
+        light_objects.push(new_object);
+    }
+    // ---------------------------------------------------
 
     let now = time::Instant::now();
     let mut old_since_time = now.elapsed().as_nanos();
@@ -304,12 +317,15 @@ fn main() {
                     ));
                 }
 
-                // Вращение по кругу
-                let elapsed_time = now.elapsed();
-                let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
-                let camx = rotate_value.sin() * radius;
-                let camy = rotate_value.cos() * radius;
-                light.set_position(vec3(camx, (camx + camy) / 2.0, camy));
+                light_objects[0].set_position(camera.position());
+                light_objects[0].set_direction(-camera.direction());
+
+                // // Вращение по кругу
+                // let elapsed_time = now.elapsed();
+                // let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
+                // let camx = rotate_value.sin() * radius;
+                // let camy = rotate_value.cos() * radius;
+                // light.set_position(vec3(camx, (camx + camy) / 2.0, camy));
                 // light.set_direction(vec3(camx, (camx + camy) / 2.0, camy));
 
                 let mut matrix = Matrix4::from_scale(1.0);
@@ -344,15 +360,12 @@ fn main() {
                 }
 
                 shader_program.use_();
-                light.configure_shader(&shader_program);
-
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
-
                 shader_program.set_uniform_int("material.diffuse", 0);
                 shader_program.set_uniform_int("material.specular", 1);
 
-                view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light);
+                view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light_objects);
                 windowed_context.swap_buffers().unwrap();
             }
             _ => (),
