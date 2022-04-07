@@ -8,6 +8,7 @@ pub enum LightType {
 }
 
 pub struct Light {
+    power: f32,
     position: Vector3<f32>,
     rotation: Vector3<f32>,
     scale: f32,
@@ -30,6 +31,7 @@ pub struct Light {
 impl Light {
     pub fn new() -> Self {
         Light {
+            power: 1.0,
             position: vec3(0.0, 0.0, 0.0),
             rotation: vec3(0.0, 0.0, 0.0),
             scale: 1.0,
@@ -51,20 +53,22 @@ impl Light {
         }
     }
 
+    pub fn power(&self) -> f32 { self.power }
+    pub fn set_power(&mut self, value: f32) { self.power = value; }
     pub fn position(&self) -> Vector3<f32> { self.position }
-    pub fn set_position(&mut self, value: Vector3<f32>) { self.position = value }
+    pub fn set_position(&mut self, value: Vector3<f32>) { self.position = value; }
     pub fn rotation(&self) -> Vector3<f32> { self.rotation }
-    pub fn set_rotation(&mut self, value: Vector3<f32>) { self.rotation = value } 
+    pub fn set_rotation(&mut self, value: Vector3<f32>) { self.rotation = value; } 
     pub fn scale(&self) -> f32 { self.scale }
-    pub fn set_scale(&mut self, value: f32) { self.scale = value }
+    pub fn set_scale(&mut self, value: f32) { self.scale = value; }
 
     pub fn direction(&self) -> Vector3<f32> { self.direction }
     pub fn set_direction(&mut self, value: Vector3<f32>) { self.direction = value; }
-    pub fn ambient(&self) -> Vector3<f32> { self.ambient }
+    pub fn ambient(&self) -> Vector3<f32> { self.ambient * self.power }
     pub fn set_ambient(&mut self, value: Vector3<f32>) { self.ambient = value; }
-    pub fn diffuse(&self) -> Vector3<f32> { self.diffuse }
+    pub fn diffuse(&self) -> Vector3<f32> { self.diffuse * self.power }
     pub fn set_diffuse(&mut self, value: Vector3<f32>) { self.diffuse = value; }
-    pub fn specular(&self) -> Vector3<f32> { self.specular }
+    pub fn specular(&self) -> Vector3<f32> { self.specular * self.power }
     pub fn set_specular(&mut self, value: Vector3<f32>) { self.specular = value; }
 
     pub fn constant(&self) -> f32 { self.constant }

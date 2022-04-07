@@ -85,15 +85,29 @@ fn main() {
     // ----- Рандомные кубы ------
     let mut render_objects: Vec<RenderObject> = vec![];
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    let mut material = Material::new();
+    material.ambient = vec3(0.0, 0.0, 0.0);
+    material.diffuse = vec3(0.3, 0.3, 0.3);
+    material.specular = vec3(1.0, 1.0, 1.0);
     rend_obj.set_shininess(32.0);
+    rend_obj.set_material(material);
     render_objects.push(rend_obj);
     
     for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
-        new_object.set_texture(texture3.clone());
-        new_object.set_shininess(32.0);
+        let mut material = Material::new();
+        material.ambient = vec3(0.0, 0.0, 0.0);
+        material.diffuse = generate_normal_vector();
+        material.specular = generate_normal_vector();
+        // material.ambient = vec3(0.1, 0.1, 0.1);
+        // material.diffuse = vec3(0.3, 0.3, 0.3);
+        // material.specular = vec3(1.0, 1.0, 1.0);
+
+        //new_object.set_texture(texture3.clone());
+        new_object.set_shininess(generate_float());
         new_object.set_position(generate_vector());
         new_object.set_scale(generate_float() / 100.0);
+        new_object.set_material(material);
         render_objects.push(new_object);
     }
     // ---------------------------------------------------
@@ -101,15 +115,17 @@ fn main() {
 
     // ----- Рандомные светильники ------
     let mut light_objects: Vec<Light> = vec![];
-    let mut light_obj = Light::new();
-    light_obj.set_direction(vec3(1.0, 0.0, 0.0));
-    light_obj.set_ambient(vec3(0.0, 0.0, 0.0));
-    light_obj.set_diffuse(vec3(0.2, 0.2, 0.2));
-    light_obj.set_specular(vec3(0.0, 0.0, 0.0));
-    light_obj.set_cut_off(5.0);
-    light_obj.set_outer_cut_off(20.0);
-    light_obj.set_light_type(LightType::Spotlight);
-    light_objects.push(light_obj);
+
+    // // Фонарик
+    // let mut light_obj = Light::new();
+    // light_obj.set_direction(vec3(1.0, 0.0, 0.0));
+    // light_obj.set_ambient(vec3(0.0, 0.0, 0.0));
+    // light_obj.set_diffuse(vec3(0.4, 0.4, 0.4));
+    // light_obj.set_specular(vec3(0.8, 0.8, 0.8));
+    // light_obj.set_cut_off(5.0);
+    // light_obj.set_outer_cut_off(20.0);
+    // light_obj.set_light_type(LightType::Spotlight);
+    // light_objects.push(light_obj);
 
     for i in 1..50 {
         let mut new_object = Light::new();
@@ -121,8 +137,8 @@ fn main() {
         new_object.set_specular(generate_normal_vector());
 
         new_object.set_constant(1.0);
-        new_object.set_linear(0.09);
-        new_object.set_quadratic(0.032);
+        new_object.set_linear(0.022);
+        new_object.set_quadratic(0.0019);
         
         new_object.set_light_type(LightType::Point);
         new_object.set_mesh(mesh.clone());
@@ -160,9 +176,12 @@ fn main() {
     let mut delta_x = 0.0;
     let mut delta_y = 0.0;
 
+    // let mut is_light_up = true;
+    // let mut is_light_down = false;
+
     // Первоначальная настройка пайплайна
     unsafe { 
-        gl::ClearColor(0.1, 0.1, 0.1, 1.0);
+        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
@@ -317,16 +336,21 @@ fn main() {
                     ));
                 }
 
-                light_objects[0].set_position(camera.position());
-                light_objects[0].set_direction(-camera.direction());
+                // light_objects[0].set_position(camera.position());
+                // light_objects[0].set_direction(-camera.direction());
 
-                // // Вращение по кругу
-                // let elapsed_time = now.elapsed();
-                // let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
-                // let camx = rotate_value.sin() * radius;
-                // let camy = rotate_value.cos() * radius;
-                // light.set_position(vec3(camx, (camx + camy) / 2.0, camy));
-                // light.set_direction(vec3(camx, (camx + camy) / 2.0, camy));
+                // Вращение по кругу
+                let elapsed_time = now.elapsed();
+                let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
+                let camx = rotate_value.sin() * radius;
+                let camy = rotate_value.cos() * radius;
+                light_objects[0].set_position(vec3(camx, (camx + camy) / 2.0, camy));
+                //light_objects[0].set_direction(vec3(camx, (camx + camy) / 2.0, camy));
+                for i in light_objects.iter_mut() {
+                    let pos = i.position();
+                    let length = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
+                    i.set_power(((elapsed_time.as_millis() as f32) / (length * 10.0)).sin() + 0.5);
+                }
 
                 let mut matrix = Matrix4::from_scale(1.0);
                 if forward || back || right || left || up || down {
@@ -415,13 +439,13 @@ fn prompt_for_video_mode(monitor: &monitor::MonitorHandle) -> monitor::VideoMode
 
 fn generate_float() -> f32 {
     let mut rng = rand::thread_rng();
-    let result = rng.gen_range(0.0..500.0);
+    let result = rng.gen_range(0.0..256.0);
     return result;
 }
 
 fn generate_vector() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
-    let mut generator = || -> f32 { (rng.gen_range(-1000..1000) as f32) / 10.0 };
+    let mut generator = || -> f32 { (rng.gen_range(-1200..1200) as f32) / 10.0 };
     vec3(generator(), generator(), generator())
 }
 

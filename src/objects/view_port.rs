@@ -40,6 +40,9 @@ impl ViewPort {
             shader_program.set_uniform_matrix4("model", &current_object.transform_matrix());
             shader_program.set_uniform_matrix3("normalMatrix", &current_object.normal_matrix(&camera.view_matrix()));
 
+            shader_program.set_uniform_vector3("material.ambient", &current_object.material().ambient);
+            shader_program.set_uniform_vector3("material.diffuse", &current_object.material().diffuse);
+            shader_program.set_uniform_vector3("material.specular", &current_object.material().specular);
             shader_program.set_uniform_float("material.shininess", current_object.shininess());
             // unsafe {
             //     gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
@@ -80,8 +83,7 @@ impl ViewPort {
             light_shader_program.set_uniform_matrix4("model", &current_light.transform_matrix());
             let diff_color = current_light.diffuse();
             let spec_color = current_light.specular();
-            let res_color = vec3(diff_color.x * spec_color.x, diff_color.y * spec_color.y, diff_color.z * spec_color.z);
-            light_shader_program.set_uniform_vector3("lightColor", &res_color);
+            light_shader_program.set_uniform_vector3("lightColor", &current_light.specular());
 
             match current_light.mesh() {
                 Some(mesh) => {
