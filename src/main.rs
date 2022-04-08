@@ -96,9 +96,10 @@ fn main() {
     for i in 1..500 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         let mut material = Material::new();
+        let object_color = generate_normal_vector();
         material.ambient = vec3(0.0, 0.0, 0.0);
-        material.diffuse = generate_normal_vector();
-        material.specular = generate_normal_vector();
+        material.diffuse = object_color;
+        material.specular = object_color;
         // material.ambient = vec3(0.1, 0.1, 0.1);
         // material.diffuse = vec3(0.3, 0.3, 0.3);
         // material.specular = vec3(1.0, 1.0, 1.0);
@@ -120,10 +121,10 @@ fn main() {
     // let mut light_obj = Light::new();
     // light_obj.set_direction(vec3(1.0, 0.0, 0.0));
     // light_obj.set_ambient(vec3(0.0, 0.0, 0.0));
-    // light_obj.set_diffuse(vec3(0.4, 0.4, 0.4));
-    // light_obj.set_specular(vec3(0.8, 0.8, 0.8));
+    // light_obj.set_diffuse(vec3(0.7, 0.7, 0.7));
+    // light_obj.set_specular(vec3(1.0, 1.0, 1.0));
     // light_obj.set_cut_off(5.0);
-    // light_obj.set_outer_cut_off(20.0);
+    // light_obj.set_outer_cut_off(25.0);
     // light_obj.set_light_type(LightType::Spotlight);
     // light_objects.push(light_obj);
 
@@ -153,7 +154,6 @@ fn main() {
     let mut is_fullscreen = false;
     let mut draw_mode = 0;
     let sensitivity = 0.7;
-    let mut camera_number = 0;
     let mut is_look_at = false;
 
     let normal_speed_step = 0.004;
@@ -176,8 +176,8 @@ fn main() {
     let mut delta_x = 0.0;
     let mut delta_y = 0.0;
 
-    // let mut is_light_up = true;
-    // let mut is_light_down = false;
+    let mut is_light_togle = true;
+    let mut global_power = 1.0;
 
     // Первоначальная настройка пайплайна
     unsafe { 
@@ -223,16 +223,7 @@ fn main() {
                             if camera.is_ortho() { camera.set_is_ortho(false); }
                             else { camera.set_is_ortho(true); }
                         },
-                        event::KeyboardInput { scancode: 51, state: event::ElementState::Released, ..} =>
-                        {
-                            camera_number -= 1;
-                            if camera_number < 0 { camera_number = 1; }
-                        },
-                        event::KeyboardInput { scancode: 52, state: event::ElementState::Released, ..} =>
-                        {
-                            camera_number += 1;
-                            if camera_number > 1 { camera_number = 0; }
-                        },
+
                         event::KeyboardInput { scancode: 38, state: event::ElementState::Released, .. } => 
                             is_look_at = !is_look_at,
 
@@ -248,6 +239,8 @@ fn main() {
                             down = false,
                         event::KeyboardInput { scancode: 57, state: event::ElementState::Released, ..} =>
                             up = false,
+                        event::KeyboardInput { scancode: 57416, state: event::ElementState::Released, ..} =>
+                            is_light_togle = !is_light_togle,
                         event::KeyboardInput { scancode: 42, state: event::ElementState::Released, ..} =>
                             { 
                                 current_speed_step = normal_speed_step; 
@@ -266,6 +259,10 @@ fn main() {
                             down = true,
                         event::KeyboardInput { scancode: 57, state: event::ElementState::Pressed, ..} =>
                             up = true,
+                        // event::KeyboardInput { scancode: 57416, state: event::ElementState::Pressed, ..} =>
+                        //     is_light_up = true,
+                        // event::KeyboardInput { scancode: 57424, state: event::ElementState::Pressed, ..} =>
+                        //     is_light_down = true,
                         event::KeyboardInput { scancode: 42, state: event::ElementState::Pressed, ..} =>
                             {
                                 current_speed_step = fast_speed_step;
@@ -295,6 +292,10 @@ fn main() {
                     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                     set_cullface_mode(draw_mode);
+
+                    let pow_val = global_power / 100.0;
+                    gl::ClearColor(pow_val, pow_val, pow_val, 1.0);
+                    
                 }
 
                 // Дельта времени
@@ -336,21 +337,16 @@ fn main() {
                     ));
                 }
 
-                // light_objects[0].set_position(camera.position());
-                // light_objects[0].set_direction(-camera.direction());
-
                 // Вращение по кругу
                 let elapsed_time = now.elapsed();
                 let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
                 let camx = rotate_value.sin() * radius;
                 let camy = rotate_value.cos() * radius;
+
                 light_objects[0].set_position(vec3(camx, (camx + camy) / 2.0, camy));
-                //light_objects[0].set_direction(vec3(camx, (camx + camy) / 2.0, camy));
-                for i in light_objects.iter_mut() {
-                    let pos = i.position();
-                    let length = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                    i.set_power(((elapsed_time.as_millis() as f32) / (length * 10.0)).sin() + 0.5);
-                }
+                // light_objects[0].set_direction(vec3(camx, (camx + camy) / 2.0, camy));
+                // light_objects[0].set_position(camera.position());
+                // light_objects[0].set_direction(-camera.direction());
 
                 let mut matrix = Matrix4::from_scale(1.0);
                 if forward || back || right || left || up || down {
@@ -381,6 +377,26 @@ fn main() {
                 if down {
                     matrix = Matrix4::from_translation(-camera.up() * speed * delta_time);
                     camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                }
+                if is_light_togle {
+                    for i in light_objects.iter_mut() {
+                        if global_power < 1.1 {
+                            let pos = i.position();
+                            let length = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt() / 1200.0;
+                            global_power += length / 100.0;
+                            i.set_power(global_power);
+                        }
+                    }
+                }
+                if !is_light_togle {
+                    for i in light_objects.iter_mut() {
+                        if global_power > -0.1 {
+                            let pos = i.position();
+                            let length = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt() / 1200.0;
+                            global_power -= length / 100.0;
+                            i.set_power(global_power);
+                        }
+                    }
                 }
 
                 shader_program.use_();
