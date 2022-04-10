@@ -1,6 +1,7 @@
 mod objects;
 
 use gl;
+use std::f32;
 use std::ffi;
 use std::path::Path;
 
@@ -100,9 +101,6 @@ fn main() {
         material.ambient = vec3(0.0, 0.0, 0.0);
         material.diffuse = object_color;
         material.specular = object_color;
-        // material.ambient = vec3(0.1, 0.1, 0.1);
-        // material.diffuse = vec3(0.3, 0.3, 0.3);
-        // material.specular = vec3(1.0, 1.0, 1.0);
 
         //new_object.set_texture(texture3.clone());
         new_object.set_shininess(generate_float());
@@ -117,21 +115,31 @@ fn main() {
     // ----- Рандомные светильники ------
     let mut light_objects: Vec<Light> = vec![];
 
-    // // Фонарик
-    // let mut light_obj = Light::new();
-    // light_obj.set_direction(vec3(1.0, 0.0, 0.0));
-    // light_obj.set_ambient(vec3(0.0, 0.0, 0.0));
-    // light_obj.set_diffuse(vec3(0.7, 0.7, 0.7));
-    // light_obj.set_specular(vec3(1.0, 1.0, 1.0));
-    // light_obj.set_cut_off(5.0);
-    // light_obj.set_outer_cut_off(25.0);
-    // light_obj.set_light_type(LightType::Spotlight);
-    // light_objects.push(light_obj);
-
-    for i in 1..50 {
+    // Статичные светильники
+    for i in 1..20 {
         let mut new_object = Light::new();
         new_object.set_position(generate_vector());
         new_object.set_scale(0.2);
+
+        new_object.set_ambient(generate_normal_vector());
+        new_object.set_diffuse(generate_normal_vector());
+        new_object.set_specular(generate_normal_vector());
+
+        new_object.set_constant(1.0);
+        new_object.set_linear(0.022);
+        new_object.set_quadratic(0.0019);
+        
+        new_object.set_light_type(LightType::Point);
+        new_object.set_mesh(mesh.clone());
+        light_objects.push(new_object);
+    }
+
+    // Динамические светильники
+    for i in 1..20 {
+        let mut new_object = Light::new();
+        new_object.set_position(generate_vector());
+        new_object.set_scale(0.2);
+        new_object.set_radius(generate_float());
 
         new_object.set_ambient(generate_normal_vector());
         new_object.set_diffuse(generate_normal_vector());
@@ -177,7 +185,6 @@ fn main() {
     let mut delta_y = 0.0;
 
     let mut is_light_togle = true;
-    let mut global_power = 1.0;
 
     // Первоначальная настройка пайплайна
     unsafe { 
@@ -259,10 +266,6 @@ fn main() {
                             down = true,
                         event::KeyboardInput { scancode: 57, state: event::ElementState::Pressed, ..} =>
                             up = true,
-                        // event::KeyboardInput { scancode: 57416, state: event::ElementState::Pressed, ..} =>
-                        //     is_light_up = true,
-                        // event::KeyboardInput { scancode: 57424, state: event::ElementState::Pressed, ..} =>
-                        //     is_light_down = true,
                         event::KeyboardInput { scancode: 42, state: event::ElementState::Pressed, ..} =>
                             {
                                 current_speed_step = fast_speed_step;
@@ -292,10 +295,6 @@ fn main() {
                     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                     set_cullface_mode(draw_mode);
-
-                    let pow_val = global_power / 100.0;
-                    gl::ClearColor(pow_val, pow_val, pow_val, 1.0);
-                    
                 }
 
                 // Дельта времени
@@ -339,14 +338,16 @@ fn main() {
 
                 // Вращение по кругу
                 let elapsed_time = now.elapsed();
-                let rotate_value = (elapsed_time.as_millis() as f32) / 5000.0;
-                let camx = rotate_value.sin() * radius;
-                let camy = rotate_value.cos() * radius;
-
-                light_objects[0].set_position(vec3(camx, (camx + camy) / 2.0, camy));
-                // light_objects[0].set_direction(vec3(camx, (camx + camy) / 2.0, camy));
-                // light_objects[0].set_position(camera.position());
-                // light_objects[0].set_direction(-camera.direction());
+                let rotate_value = elapsed_time.as_millis() as f32;
+                for i in light_objects.iter_mut() {
+                    if i.radius() > 10.0 {
+                        let slow_multiple = i.radius() * 20.0;
+                        let camx = (rotate_value / slow_multiple).sin() * i.radius();
+                        let camy = ((rotate_value / slow_multiple) + i.radius()).cos() * i.radius();
+                        let camz = (rotate_value / slow_multiple).cos() * i.radius();
+                        i.set_position(vec3(camx, camy, camz));
+                    }
+                }
 
                 let mut matrix = Matrix4::from_scale(1.0);
                 if forward || back || right || left || up || down {
@@ -380,21 +381,19 @@ fn main() {
                 }
                 if is_light_togle {
                     for i in light_objects.iter_mut() {
-                        if global_power < 1.1 {
+                        if i.power() < 1.1 {
                             let pos = i.position();
-                            let length = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt() / 1200.0;
-                            global_power += length / 100.0;
-                            i.set_power(global_power);
+                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
+                            i.set_power(i.power() + lenght / (2100.0 * 8.0));
                         }
                     }
                 }
                 if !is_light_togle {
                     for i in light_objects.iter_mut() {
-                        if global_power > -0.1 {
+                        if i.power() > -0.1 {
                             let pos = i.position();
-                            let length = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt() / 1200.0;
-                            global_power -= length / 100.0;
-                            i.set_power(global_power);
+                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
+                            i.set_power(i.power() - lenght / (2100.0 * 8.0));
                         }
                     }
                 }
@@ -461,8 +460,16 @@ fn generate_float() -> f32 {
 
 fn generate_vector() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
-    let mut generator = || -> f32 { (rng.gen_range(-1200..1200) as f32) / 10.0 };
-    vec3(generator(), generator(), generator())
+    let random1 = (rng.gen_range(-1000..1000) as f32) / 100.0;
+    let random2 = (rng.gen_range(-1000..1000) as f32) / 100.0;
+    let theta1 = random1 * 2.0 * f32::consts::PI;
+    let theta2 = random2 * 2.0 * f32::consts::PI;
+    let radius = (rng.gen_range(0..2_000_000) as f32).cbrt();
+
+    let x = radius * (theta1.cos() * theta2.sin());
+    let y = radius * theta1.sin();
+    let z = radius * (theta1.cos() * theta2.cos());
+    vec3(x, y, z)
 }
 
 fn generate_normal_vector() -> Vector3<f32> {

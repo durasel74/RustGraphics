@@ -27,6 +27,9 @@ pub struct Light {
 
     mesh: Option<Mesh>,
     light_type: LightType,
+
+
+    radius: f32,
 }
 impl Light {
     pub fn new() -> Self {
@@ -50,6 +53,9 @@ impl Light {
 
             mesh: None,
             light_type: LightType::Directional,
+
+
+            radius: 0.0,
         }
     }
 
@@ -88,6 +94,13 @@ impl Light {
     pub fn light_type(&self) -> &LightType { &self.light_type }
     pub fn set_light_type(&mut self, value: LightType) { self.light_type = value; }
 
+
+
+    pub fn radius(&self) -> f32 { self.radius }
+    pub fn set_radius(&mut self, value: f32) { self.radius = value; }
+
+
+    
     pub fn transform_matrix(&self) -> Matrix4<f32> {
         let pos_matrix = Matrix4::from_translation(self.position.clone());
         let rot_matrix = Matrix4::from_angle_x(Rad(self.rotation.x.to_radians())) * 
