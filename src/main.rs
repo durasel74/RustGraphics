@@ -2,7 +2,7 @@ mod objects;
 
 use gl;
 use std::f32;
-use std::ffi;
+use std::cmp;
 use std::path::Path;
 
 use std::time;
@@ -94,7 +94,7 @@ fn main() {
     rend_obj.set_material(material);
     render_objects.push(rend_obj);
     
-    for i in 1..500 {
+    for i in 1..400 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         let mut material = Material::new();
         let object_color = generate_normal_vector();
@@ -105,7 +105,7 @@ fn main() {
         //new_object.set_texture(texture3.clone());
         new_object.set_shininess(generate_float());
         new_object.set_position(generate_vector());
-        new_object.set_scale(generate_float() / 100.0);
+        new_object.set_scale((generate_float() / 100.0) + 0.5);
         new_object.set_material(material);
         render_objects.push(new_object);
     }
@@ -156,19 +156,18 @@ fn main() {
     // ---------------------------------------------------
 
     let now = time::Instant::now();
-    let mut old_since_time = now.elapsed().as_nanos();
-    let radius = 50.0;
+    let mut old_since_time = now.elapsed().as_secs_f32();
 
     let mut is_fullscreen = false;
     let mut draw_mode = 0;
-    let sensitivity = 0.7;
+    let sensitivity = 3.0;
     let mut is_look_at = false;
 
-    let normal_speed_step = 0.004;
-    let fast_speed_step = 0.007;
+    let normal_speed_step = 0.03;
+    let fast_speed_step = 0.07;
     let mut current_speed_step = normal_speed_step;
-    let max_normal_speed = 0.1;
-    let max_fast_speed = 1.0;
+    let max_normal_speed = 1.0;
+    let max_fast_speed = 10.0;
     let mut current_max_speed = max_normal_speed;
     let mut speed = 0.0;
     
@@ -298,8 +297,8 @@ fn main() {
                 }
 
                 // Дельта времени
-                let since_time = now.elapsed().as_nanos();
-                let delta_time = ((since_time - old_since_time) as f32) / 10000000.0;
+                let since_time = now.elapsed().as_secs_f32();
+                let delta_time = (since_time - old_since_time) * 10.0;
                 old_since_time = since_time;
 
                 let view_width = windowed_context.window().inner_size().width as i32;
@@ -308,7 +307,7 @@ fn main() {
                 view_port.set_size((view_width, view_height));
 
                 let offset_x = delta_x * sensitivity * delta_time as f64;
-                let offset_y = delta_y * sensitivity;
+                let offset_y = delta_y * sensitivity * delta_time as f64;
                 delta_x = 0.0;
                 delta_y = 0.0;
                 yaw += offset_x as f32;
@@ -390,7 +389,7 @@ fn main() {
                 }
                 if !is_light_togle {
                     for i in light_objects.iter_mut() {
-                        if i.power() > -0.1 {
+                        if i.power() > -0.1 && (i.radius() > 20.0 || i.radius() < 10.0) {
                             let pos = i.position();
                             let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
                             i.set_power(i.power() - lenght / (2100.0 * 8.0));
