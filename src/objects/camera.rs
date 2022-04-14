@@ -77,9 +77,10 @@ impl Camera {
     }
 
     pub fn projection_matrix(&self) -> Matrix4<f32> {
-        let width = self.view_size.0;
+        let mut width = self.view_size.0;
         let mut height = self.view_size.1;
         if height == 0.0 { height = 1.0 }
+        if width == 0.0 { width = 1.0 }
         let aspect = width / height;
 
         if self.is_ortho {
