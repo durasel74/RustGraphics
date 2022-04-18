@@ -1,5 +1,6 @@
 use gl;
 use gl::types::{ GLint, GLuint, GLsizeiptr, GLvoid };
+use super::Vertex;
 
 #[derive(Clone)]
 pub struct RenderData {
@@ -8,21 +9,21 @@ pub struct RenderData {
     pub ebo: GLuint,
 }
 impl RenderData {
-    pub fn from_verteices(vertices: &Vec<f32>, indices: &Vec<u16>) -> Self {
+    pub fn from_verteices(vertices: &Vec<Vertex>, indices: &Vec<u16>) -> Self {
         let vbo = Self::create_vbo(vertices);
         let vao = Self::create_vao(vbo);
         let ebo = Self::create_ebo(indices);
         RenderData { vbo, vao, ebo }
     }
 
-    pub fn create_vbo(vertices: &Vec<f32>) -> GLuint {
+    pub fn create_vbo(vertices: &Vec<Vertex>) -> GLuint {
         let mut vbo: GLuint = 0;
         unsafe { gl::GenBuffers(1, &mut vbo); }
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (vertices.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
+                (vertices.len() * std::mem::size_of::<Vertex>()) as GLsizeiptr,
                 vertices.as_ptr() as *const GLvoid,
                 gl::STATIC_DRAW,
             );

@@ -49,9 +49,9 @@ in mat4 View;
 
 out vec4 FragColor;
 
-#define DIR_LIGHT_COUNT 5
-#define POINT_LIGHT_COUNT 50
-#define SPOT_LIGHT_COUNT 5
+#define DIR_LIGHT_COUNT 1
+#define POINT_LIGHT_COUNT 30
+#define SPOT_LIGHT_COUNT 1
 
 uniform Material material;
 uniform DirLight dirLights[DIR_LIGHT_COUNT];

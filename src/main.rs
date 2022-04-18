@@ -2,14 +2,15 @@ mod objects;
 
 use gl;
 use std::f32;
-use std::cmp;
-use std::path::Path;
-
 use std::time;
+use std::path::Path;
+use std::io::BufReader;
+use std::fs::File;
 use rand::Rng;
+
 use cgmath::prelude::InnerSpace;
 use cgmath::{ Matrix, Matrix4, Vector3, Vector4, vec3, vec4 };
-use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, Light, LightType, figures };
+use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, Light, LightType };
 
 use glutin;
 use glutin::window;
@@ -17,6 +18,8 @@ use glutin::event;
 use glutin::event_loop;
 use glutin::dpi;
 use glutin::monitor;
+
+use obj::{ load_obj, Obj, TexturedVertex };
 
 fn main() {
     // Создание окна
@@ -41,21 +44,6 @@ fn main() {
     let gl_context = windowed_context.context();
     gl::load_with(|ptr| gl_context.get_proc_address(ptr) as *const _);
 
-    // Загрузка модели
-    let mesh: Mesh = figures::normal_cube();
-
-    // Загрузка текстур
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
-    let texture3 = match texture_loadresult {
-        Ok(texture) => texture,
-        Err(err) => { println!("{}", err); return }
-    };
-    let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
-    let light_map3 = match texture_loadresult {
-        Ok(texture) => texture,
-        Err(err) => { println!("{}", err); return }
-    };
-
     // Пути к файлам шейдеров
     let vert_filename = Path::new("Shaders/object.vert").to_str().unwrap();
     let frag_filename = Path::new("Shaders/object.frag").to_str().unwrap();
@@ -76,6 +64,31 @@ fn main() {
         Err(err) => { println!("{}", err); return }
     };
 
+    
+    // Загрузка OBJ модели
+    // Models/untitled.obj
+    let input = BufReader::new(File::open("Models/Sphere.obj").unwrap());
+    let obj_model: Obj<TexturedVertex, u16> = load_obj(input).unwrap();
+
+    let input = BufReader::new(File::open("Models/Cube.obj").unwrap());
+    let obj_model2: Obj<TexturedVertex, u16> = load_obj(input).unwrap();
+
+    // Загрузка модели
+    let mesh: Mesh = Mesh::from_obj(&obj_model);
+    let light_mesh: Mesh = Mesh::from_obj(&obj_model2);
+
+    // // Загрузка текстур
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
+    // let texture3 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+    // let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
+    // let light_map3 = match texture_loadresult {
+    //     Ok(texture) => texture,
+    //     Err(err) => { println!("{}", err); return }
+    // };
+
     let mut view_port = ViewPort::new();
 
     let mut camera = Camera::new();
@@ -83,7 +96,7 @@ fn main() {
     camera.set_is_ortho(false);
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
-    // ----- Рандомные кубы ------
+    // ----- Рандомные модели ------
     let mut render_objects: Vec<RenderObject> = vec![];
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
     let mut material = Material::new();
@@ -94,7 +107,7 @@ fn main() {
     rend_obj.set_material(material);
     render_objects.push(rend_obj);
     
-    for i in 1..400 {
+    for i in 1..30 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
         let mut material = Material::new();
         let object_color = generate_normal_vector();
@@ -114,9 +127,15 @@ fn main() {
 
     // ----- Рандомные светильники ------
     let mut light_objects: Vec<Light> = vec![];
+    let mut new_object = Light::new();
+    new_object.set_ambient(vec3(0.2, 0.2, 0.2));
+    new_object.set_diffuse(vec3(0.7, 0.7, 0.7));
+    new_object.set_specular(vec3(1.0, 1.0, 1.0));
+    new_object.set_light_type(LightType::Directional);
+    light_objects.push(new_object);
 
     // Статичные светильники
-    for i in 1..20 {
+    for i in 1..15 {
         let mut new_object = Light::new();
         new_object.set_position(generate_vector());
         new_object.set_scale(0.2);
@@ -130,16 +149,16 @@ fn main() {
         new_object.set_quadratic(0.0019);
         
         new_object.set_light_type(LightType::Point);
-        new_object.set_mesh(mesh.clone());
+        new_object.set_mesh(light_mesh.clone());
         light_objects.push(new_object);
     }
 
     // Динамические светильники
-    for i in 1..20 {
+    for i in 1..15 {
         let mut new_object = Light::new();
         new_object.set_position(generate_vector());
         new_object.set_scale(0.2);
-        new_object.set_radius(generate_float());
+        new_object.set_radius(generate_float() / 2.0);
 
         new_object.set_ambient(generate_normal_vector());
         new_object.set_diffuse(generate_normal_vector());
@@ -150,25 +169,26 @@ fn main() {
         new_object.set_quadratic(0.0019);
         
         new_object.set_light_type(LightType::Point);
-        new_object.set_mesh(mesh.clone());
+        new_object.set_mesh(light_mesh.clone());
         light_objects.push(new_object);
     }
-    let mut new_object = Light::new();
-    new_object.set_position(generate_vector());
-    new_object.set_scale(0.2);
-    new_object.set_radius(11.0);
 
-    new_object.set_ambient(vec3(0.2, 0.2, 0.2));
-    new_object.set_diffuse(vec3(0.7, 0.7, 0.7));
-    new_object.set_specular(vec3(1.0, 1.0, 1.0));
+    // let mut new_object = Light::new();
+    // new_object.set_position(generate_vector());
+    // new_object.set_scale(0.2);
+    // new_object.set_radius(11.0);
 
-    new_object.set_constant(1.0);
-    new_object.set_linear(0.022);
-    new_object.set_quadratic(0.0019);
+    // new_object.set_ambient(vec3(0.2, 0.2, 0.2));
+    // new_object.set_diffuse(vec3(0.7, 0.7, 0.7));
+    // new_object.set_specular(vec3(1.0, 1.0, 1.0));
+
+    // new_object.set_constant(1.0);
+    // new_object.set_linear(0.022);
+    // new_object.set_quadratic(0.0019);
     
-    new_object.set_light_type(LightType::Point);
-    new_object.set_mesh(mesh.clone());
-    light_objects.push(new_object);
+    // new_object.set_light_type(LightType::Point);
+    // new_object.set_mesh(mesh.clone());
+    // light_objects.push(new_object);
     // ---------------------------------------------------
 
     let now = time::Instant::now();
@@ -179,10 +199,10 @@ fn main() {
     let sensitivity = 3.0;
     let mut is_look_at = false;
 
-    let normal_speed_step = 0.03;
+    let normal_speed_step = 0.02;
     let fast_speed_step = 0.07;
     let mut current_speed_step = normal_speed_step;
-    let max_normal_speed = 1.0;
+    let max_normal_speed = 0.6;
     let max_fast_speed = 10.0;
     let mut current_max_speed = max_normal_speed;
     let mut speed = 0.0;
@@ -208,7 +228,7 @@ fn main() {
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
-        gl::FrontFace(gl::CW);
+        gl::FrontFace(gl::CCW);
         gl::CullFace(gl::BACK);
     }
 
@@ -354,6 +374,8 @@ fn main() {
                     ));
                 }
 
+                light_objects[0].set_direction(-camera.direction());
+
                 // Вращение по кругу
                 let elapsed_time = now.elapsed();
                 let rotate_value = elapsed_time.as_millis() as f32;
@@ -402,13 +424,13 @@ fn main() {
                         if i.power() < 1.1 {
                             let pos = i.position();
                             let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                            i.set_power(i.power() + lenght / (2100.0 * 8.0));
+                            i.set_power(i.power() + lenght / (2100.0 * 25.0));
                         }
                     }
                 }
                 if !is_light_togle {
                     for i in light_objects.iter_mut() {
-                        if i.power() > -0.1 && (i.radius() > 11.0 || i.radius() < 10.0) {
+                        if i.power() > 0.0 && (i.radius() > 11.0 || i.radius() < 10.0) {
                             let pos = i.position();
                             let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
                             i.set_power(i.power() - lenght / (2100.0 * 8.0));
@@ -417,10 +439,10 @@ fn main() {
                 }
                 if is_half_light {
                     for i in light_objects.iter_mut() {
-                        if i.power() > -0.1 && i.radius() < 10.0 {
+                        if i.power() > 0.0 && i.radius() < 10.0 {
                             let pos = i.position();
                             let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                            i.set_power(i.power() - lenght / (2100.0 * 8.0));
+                            i.set_power(i.power() - lenght / (2100.0 * 25.0));
                         }
                     }
                 }
@@ -491,7 +513,7 @@ fn generate_vector() -> Vector3<f32> {
     let random2 = (rng.gen_range(-1000..1000) as f32) / 100.0;
     let theta1 = random1 * 2.0 * f32::consts::PI;
     let theta2 = random2 * 2.0 * f32::consts::PI;
-    let radius = (rng.gen_range(0..2_000_000) as f32).cbrt();
+    let radius = (rng.gen_range(0..0_500_000) as f32).cbrt();
 
     let x = radius * (theta1.cos() * theta2.sin());
     let y = radius * theta1.sin();

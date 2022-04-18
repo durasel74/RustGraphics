@@ -44,30 +44,28 @@ impl ViewPort {
             shader_program.set_uniform_vector3("material.diffuse", &current_object.material().diffuse);
             shader_program.set_uniform_vector3("material.specular", &current_object.material().specular);
             shader_program.set_uniform_float("material.shininess", current_object.shininess());
-            // unsafe {
-            //     gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
-            //         gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
-            // }
 
             unsafe {
                 match current_object.texture() {
                     Some(texture) => {
                         gl::ActiveTexture(gl::TEXTURE0);
-                        gl::BindTexture(gl::TEXTURE_2D, texture.id());
+                        gl::BindTexture(gl::TEXTURE_2D, texture.id);
                     },
                     None => ()
                 }
                 match current_object.light_map() {
                     Some(texture) => {
                         gl::ActiveTexture(gl::TEXTURE1);
-                        gl::BindTexture(gl::TEXTURE_2D, texture.id());
+                        gl::BindTexture(gl::TEXTURE_2D, texture.id);
                     },
                     None => ()
                 }
 
                 gl::BindVertexArray(current_object.mesh().render_data().vao);
-                //gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
-                gl::DrawArrays(gl::TRIANGLES, 0, (current_object.mesh().vertices().len() / 8) as i32);
+                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
+                // gl::DrawArrays(gl::TRIANGLES, 0, (current_object.mesh().vertices().len() / 8) as i32);
+                gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
+                    gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
             }
         }
     }
@@ -81,15 +79,16 @@ impl ViewPort {
         for i in 0..light_objects.len() {
             let current_light = &light_objects[i];
             light_shader_program.set_uniform_matrix4("model", &current_light.transform_matrix());
-            let diff_color = current_light.diffuse();
-            let spec_color = current_light.specular();
             light_shader_program.set_uniform_vector3("lightColor", &current_light.specular());
 
             match current_light.mesh() {
                 Some(mesh) => {
                     unsafe {
                         gl::BindVertexArray(mesh.render_data().vao);
-                        gl::DrawArrays(gl::TRIANGLES, 0, (mesh.vertices().len() / 8) as i32);
+                        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
+                        // gl::DrawArrays(gl::TRIANGLES, 0, (mesh.vertices().len() / 8) as i32);
+                        gl::DrawElements(gl::TRIANGLES, mesh.indices().len() as i32,
+                            gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
                     }
                 },
                 _ => (),
