@@ -64,10 +64,10 @@ fn main() {
         Err(err) => { println!("{}", err); return }
     };
 
-    
-    // Загрузка OBJ модели
-    // Models/untitled.obj
-    let input = BufReader::new(File::open("Models/Sphere.obj").unwrap());
+    // Загрузка моделей
+    // let input = BufReader::new(File::open("Models/TEXT.obj").unwrap());
+    // let input = BufReader::new(File::open("Models/Sphere.obj").unwrap());
+    let input = BufReader::new(File::open("Models/TestSmooth.obj").unwrap());
     let obj_model: Obj<TexturedVertex, u16> = load_obj(input).unwrap();
 
     let input = BufReader::new(File::open("Models/Cube.obj").unwrap());
