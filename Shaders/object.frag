@@ -1,11 +1,5 @@
 #version 330 core
 
-// struct Material {
-//     sampler2D diffuse;
-//     sampler2D specular;
-//     float shininess;
-// };
-
 struct Material {
     vec3 ambient;
     vec3 diffuse;
@@ -49,7 +43,7 @@ in mat4 View;
 
 out vec4 FragColor;
 
-#define DIR_LIGHT_COUNT 1
+#define DIR_LIGHT_COUNT 5
 #define POINT_LIGHT_COUNT 30
 #define SPOT_LIGHT_COUNT 1
 
@@ -92,6 +86,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    if (material.shininess == 0) spec = 0;
 
     vec3 ambient = light.ambient * material.ambient;
     vec3 diffuse = light.diffuse * diff * material.diffuse;
@@ -110,6 +105,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    if (material.shininess == 0) spec = 0;
 
     float distance = length(lightPosition - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + 
@@ -136,6 +132,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    if (material.shininess == 0) spec = 0;
 
     float theta = dot(lightDir, normalize(-lightDirection));
     float epsilon = light.cutOff - light.outerCutOff;

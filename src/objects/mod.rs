@@ -10,7 +10,7 @@ mod material;
 mod light;
 mod vertex;
 mod misc;
-pub mod figures;
+pub mod obj_loader;
 
 pub use shader::Shader;
 pub use shader_program::ShaderProgram;

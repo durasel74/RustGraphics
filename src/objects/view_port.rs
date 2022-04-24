@@ -40,31 +40,31 @@ impl ViewPort {
             shader_program.set_uniform_matrix4("model", &current_object.transform_matrix());
             shader_program.set_uniform_matrix3("normalMatrix", &current_object.normal_matrix(&camera.view_matrix()));
 
-            shader_program.set_uniform_vector3("material.ambient", &current_object.material().ambient);
-            shader_program.set_uniform_vector3("material.diffuse", &current_object.material().diffuse);
-            shader_program.set_uniform_vector3("material.specular", &current_object.material().specular);
-            shader_program.set_uniform_float("material.shininess", current_object.shininess());
+            shader_program.set_uniform_vector3("material.ambient", &current_object.mesh().material().ambient);
+            shader_program.set_uniform_vector3("material.diffuse", &current_object.mesh().material().diffuse);
+            shader_program.set_uniform_vector3("material.specular", &current_object.mesh().material().specular);
+            shader_program.set_uniform_float("material.shininess", current_object.mesh().material().specular_exponent);
 
             unsafe {
-                match current_object.texture() {
-                    Some(texture) => {
-                        gl::ActiveTexture(gl::TEXTURE0);
-                        gl::BindTexture(gl::TEXTURE_2D, texture.id);
-                    },
-                    None => ()
-                }
-                match current_object.light_map() {
-                    Some(texture) => {
-                        gl::ActiveTexture(gl::TEXTURE1);
-                        gl::BindTexture(gl::TEXTURE_2D, texture.id);
-                    },
-                    None => ()
-                }
+                // match current_object.texture() {
+                //     Some(texture) => {
+                //         gl::ActiveTexture(gl::TEXTURE0);
+                //         gl::BindTexture(gl::TEXTURE_2D, texture.id);
+                //     },
+                //     None => ()
+                // }
+                // match current_object.light_map() {
+                //     Some(texture) => {
+                //         gl::ActiveTexture(gl::TEXTURE1);
+                //         gl::BindTexture(gl::TEXTURE_2D, texture.id);
+                //     },
+                //     None => ()
+                // }
 
                 gl::BindVertexArray(current_object.mesh().render_data().vao);
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
                 // gl::DrawArrays(gl::TRIANGLES, 0, (current_object.mesh().vertices().len() / 8) as i32);
-                gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices().len() as i32,
+                gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices_count() as i32,
                     gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
             }
         }
@@ -87,7 +87,7 @@ impl ViewPort {
                         gl::BindVertexArray(mesh.render_data().vao);
                         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
                         // gl::DrawArrays(gl::TRIANGLES, 0, (mesh.vertices().len() / 8) as i32);
-                        gl::DrawElements(gl::TRIANGLES, mesh.indices().len() as i32,
+                        gl::DrawElements(gl::TRIANGLES, mesh.indices_count() as i32,
                             gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
                     }
                 },

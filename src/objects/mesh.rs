@@ -1,15 +1,13 @@
-use cgmath::{ Vector2, Vector3, vec2, vec3 };
+use cgmath::{ Vector2, Vector3 };
 use obj::{ TexturedVertex };
-use super::{ Vertex, Texture };
-use super::RenderData;
+use super::{ Vertex, RenderData, Material, Texture };
 
 #[derive(Clone)]
 pub struct Mesh {
-    // vertices: Vec<Vertex>,
-    indices: Vec<u16>,
-    // textures: Vec<Texture>,
-
     render_data: RenderData,
+    indices_count: u16,
+    material: Material,
+    // textures: Vec<Texture>,
 }
 impl Mesh {
     pub fn from_obj(model: &obj::Obj<TexturedVertex, u16>) -> Self {
@@ -24,14 +22,15 @@ impl Mesh {
             let vertex = Vertex { position: pos, normal: norm, tex_coords: tex };
             vertices.push(vertex);
         }
-        let indices = obj_indices.clone();
-        let render_data = RenderData::from_verteices(&vertices, &indices);
-        // Mesh { vertices, indices, render_data }
-        Mesh { indices, render_data }
+        let render_data = RenderData::from_verteices(&vertices, obj_indices);
+        let indices_count = obj_indices.len() as u16;
+        let material = Material::new();
+        Mesh { render_data, indices_count, material }
     }
 
-    // pub fn vertices(&self) -> &Vec<Vertex> { &self.vertices }
-    pub fn indices(&self) -> &Vec<u16> { &self.indices }
-    //pub fn textures(&self) -> &Vec<Texture> { &self.textures }
     pub fn render_data(&self) -> &RenderData { &self.render_data }
+    pub fn indices_count(&self) -> u16 { self.indices_count }
+    pub fn material(&self) -> &Material { &self.material }
+    pub fn set_material(&mut self, value: Material) { self.material = value; }
+    //pub fn textures(&self) -> &Vec<Texture> { &self.textures }
 }
