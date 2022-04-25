@@ -64,8 +64,8 @@ fn main() {
     // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/Cube/Model.mtl").to_str().unwrap();
 
-    // let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/Sphere/Model.mtl").to_str().unwrap();
+    let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
+    let material_path = Path::new("Models/Sphere/Model.mtl").to_str().unwrap();
 
     // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TEXT/Model.mtl").to_str().unwrap();
@@ -73,15 +73,7 @@ fn main() {
     // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
 
-    let model_path = Path::new("Models/Materials/Model.obj").to_str().unwrap();
-    let mut material_paths: Vec<String> = Vec::new();
-    for i in 0..25 {
-        let path = format!("Models/Materials/Model{}.mtl", i + 1);
-        material_paths.push(path);
-    }
-    let mesh: Mesh = obj_loader::load_model(model_path);
-
-    // let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
+    let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
 
     let light_model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     let light_mesh: Mesh = obj_loader::load_model(light_model_path);
@@ -105,35 +97,22 @@ fn main() {
     camera.set_is_ortho(false);
     camera.set_position(vec3(0.0, 0.0, 1.0));
 
-    // // ----- Рандомные модели ------
-    // let mut render_objects: Vec<RenderObject> = vec![];
-    // let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    // render_objects.push(rend_obj);
-    
-    // for i in 1..30 {
-    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
-
-    //     //new_object.set_texture(texture3.clone());
-    //     new_object.set_position(generate_vector());
-    //     new_object.set_scale((generate_float() / 100.0) + 0.5);
-
-    //     render_objects.push(new_object);
-    // }
-    // // ---------------------------------------------------
-
+    // ----- Рандомные модели ------
     let mut render_objects: Vec<RenderObject> = vec![];
+    let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    render_objects.push(rend_obj);
     
-    let pos_mul = 4.0;
-    for i in 0..5 {
-        for j in 0..5 {
-            let mut new_mesh = mesh.clone();
-            let material = obj_loader::load_material(&material_paths[i * 5 + j]);
-            new_mesh.set_material(material);
-            let mut new_object = RenderObject::from_mesh(new_mesh);
-            new_object.set_position(vec3(pos_mul * i as f32, 0.0, pos_mul * j as f32));
-            render_objects.push(new_object);
-        }
+    for i in 1..30 {
+        let mut new_object = RenderObject::from_mesh(mesh.clone());
+
+        //new_object.set_texture(texture3.clone());
+        new_object.set_position(generate_vector());
+        new_object.set_scale((generate_float() / 100.0) + 0.5);
+
+        render_objects.push(new_object);
     }
+    // ---------------------------------------------------
+
 
     // ----- Рандомные светильники ------
     let mut light_objects: Vec<Light> = vec![];
@@ -147,13 +126,13 @@ fn main() {
     new_object.set_light_type(LightType::Spotlight);
     light_objects.push(new_object);
 
-    let mut new_object = Light::new();
-    new_object.set_direction(vec3(4.0, -5.0, -4.0));
-    new_object.set_ambient(vec3(0.0, 0.0, 0.0));
-    new_object.set_diffuse(vec3(0.7, 0.7, 0.7));
-    new_object.set_specular(vec3(0.9, 0.9, 0.9));
-    new_object.set_light_type(LightType::Directional);
-    light_objects.push(new_object);
+    // let mut new_object = Light::new();
+    // new_object.set_direction(vec3(4.0, -5.0, -4.0));
+    // new_object.set_ambient(vec3(0.0, 0.0, 0.0));
+    // new_object.set_diffuse(vec3(0.7, 0.7, 0.7));
+    // new_object.set_specular(vec3(0.9, 0.9, 0.9));
+    // new_object.set_light_type(LightType::Directional);
+    // light_objects.push(new_object);
 
     // // Статичные светильники
     // for i in 1..15 {
@@ -174,42 +153,25 @@ fn main() {
     //     light_objects.push(new_object);
     // }
 
-    // // Динамические светильники
-    // for i in 1..15 {
-    //     let mut new_object = Light::new();
-    //     new_object.set_position(generate_vector());
-    //     new_object.set_scale(0.2);
-    //     new_object.set_radius(generate_float() / 2.0);
+    // Динамические светильники
+    for i in 1..15 {
+        let mut new_object = Light::new();
+        new_object.set_position(generate_vector());
+        new_object.set_scale(0.2);
+        new_object.set_radius(generate_float() / 2.0);
 
-    //     new_object.set_ambient(generate_normal_vector());
-    //     new_object.set_diffuse(generate_normal_vector());
-    //     new_object.set_specular(generate_normal_vector());
+        new_object.set_ambient(generate_normal_vector());
+        new_object.set_diffuse(generate_normal_vector());
+        new_object.set_specular(generate_normal_vector());
 
-    //     new_object.set_constant(1.0);
-    //     new_object.set_linear(0.022);
-    //     new_object.set_quadratic(0.0019);
+        new_object.set_constant(1.0);
+        new_object.set_linear(0.022);
+        new_object.set_quadratic(0.0019);
         
-    //     new_object.set_light_type(LightType::Point);
-    //     new_object.set_mesh(light_mesh.clone());
-    //     light_objects.push(new_object);
-    // }
-
-    // let mut new_object = Light::new();
-    // new_object.set_position(generate_vector());
-    // new_object.set_scale(0.2);
-    // new_object.set_radius(11.0);
-
-    // new_object.set_ambient(vec3(0.2, 0.2, 0.2));
-    // new_object.set_diffuse(vec3(0.7, 0.7, 0.7));
-    // new_object.set_specular(vec3(1.0, 1.0, 1.0));
-
-    // new_object.set_constant(1.0);
-    // new_object.set_linear(0.022);
-    // new_object.set_quadratic(0.0019);
-    
-    // new_object.set_light_type(LightType::Point);
-    // new_object.set_mesh(mesh.clone());
-    // light_objects.push(new_object);
+        new_object.set_light_type(LightType::Point);
+        new_object.set_mesh(light_mesh.clone());
+        light_objects.push(new_object);
+    }
     // ---------------------------------------------------
 
     let now = time::Instant::now();

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use obj::{ load_obj, Obj, TexturedVertex };
@@ -20,6 +21,7 @@ pub fn load_model(model_path: &str) -> Mesh {
 pub fn load_material(material_path: &str) -> Material {
     let input = BufReader::new(File::open(material_path).unwrap());
     let mtl = material::parse_mtl(input).unwrap();
-    let mat = mtl.materials.get("Material").unwrap();
-    Material::from_mtl(&mat)
+    let mut mat: Option<&material::Material> = None;
+    for i in mtl.materials.values() { mat = Some(i); break; };
+    Material::from_mtl(mat.unwrap())
 }
