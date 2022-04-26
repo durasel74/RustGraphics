@@ -1,5 +1,6 @@
 use cgmath::{ Vector3, vec3 };
 use obj::raw::material;
+use super::{ Texture };
 
 #[derive(Clone)]
 pub struct Material {
@@ -7,6 +8,8 @@ pub struct Material {
     pub diffuse: Vector3<f32>,
     pub specular: Vector3<f32>,
     pub specular_exponent: f32,
+    pub diff_tex: Option<Texture>,
+    pub spec_tex: Option<Texture>,
 }
 
 impl Material {
@@ -16,10 +19,12 @@ impl Material {
             diffuse: vec3(0.5, 0.5, 0.5),
             specular: vec3(0.5, 0.5, 0.5),
             specular_exponent: 0.0,
+            diff_tex: None,
+            spec_tex: None,
         }
     }
 
-    pub fn from_mtl(material: &material::Material) -> Self {
+    pub fn from_mtl(material: &material::Material, folder_path: &str) -> Self {
         let mut ambient = vec3(0.0, 0.0, 0.0);
         if let Some(value) = &material.ambient {
             ambient = Self::mtl_color_to_vector(&value);
@@ -36,7 +41,18 @@ impl Material {
         if let Some(value) = material.specular_exponent {
             specular_exponent = value;
         }
-        Material { ambient, diffuse, specular, specular_exponent }
+
+        let mut diff_tex = None;
+        if let Some(tex) = &material.diffuse_map {
+            let tex_path = format!("{}/{}", folder_path, &tex.file);
+            diff_tex = Some(Texture::from_file(&tex_path).unwrap());
+        };
+        let mut spec_tex = None;
+        if let Some(tex) = &material.specular_map {
+            let tex_path = format!("{}/{}", folder_path, &tex.file);
+            spec_tex = Some(Texture::from_file(&tex_path).unwrap());
+        };
+        Material { ambient, diffuse, specular, specular_exponent, diff_tex, spec_tex }
     }
 
     fn mtl_color_to_vector(color: &material::MtlColor) -> Vector3<f32> {

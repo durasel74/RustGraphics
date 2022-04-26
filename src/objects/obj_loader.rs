@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
+use std::path::Path;
 use obj::{ load_obj, Obj, TexturedVertex };
 use obj::raw::material;
 use super::{ Mesh, Material };
@@ -23,5 +23,6 @@ pub fn load_material(material_path: &str) -> Material {
     let mtl = material::parse_mtl(input).unwrap();
     let mut mat: Option<&material::Material> = None;
     for i in mtl.materials.values() { mat = Some(i); break; };
-    Material::from_mtl(mat.unwrap())
+    let folder_path = Path::new(material_path).parent().unwrap().to_str().unwrap();
+    Material::from_mtl(mat.unwrap(), &folder_path)
 }

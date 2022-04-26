@@ -6,8 +6,7 @@ use super::ShaderError;
 /// Представляет косвенный объект текстуры OpenGL.
 #[derive(Clone, Eq, PartialEq)]
 pub struct Texture {
-    pub id: u32,
-    pub tex_type: String,
+    pub id: GLuint,
 }
 impl Texture {
     /// Создает текстуру из файла с изображением.
@@ -51,7 +50,7 @@ impl Texture {
             gl::GenerateMipmap(gl::TEXTURE_2D);
             gl::BindTexture(gl::TEXTURE_2D, 0);
         }
-        Ok(Texture { id: texture_id, tex_type: "".to_string() })
+        Ok(Texture { id: texture_id })
     }
 }
 

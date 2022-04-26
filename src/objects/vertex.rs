@@ -1,4 +1,4 @@
-use cgmath::{ Vector2, Vector3, vec2, vec3 };
+use cgmath::{ Vector2, Vector3 };
 
 #[derive(Copy, Clone)]
 pub struct Vertex {

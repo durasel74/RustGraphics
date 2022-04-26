@@ -1,13 +1,12 @@
 use cgmath::{ Vector2, Vector3 };
 use obj::{ TexturedVertex };
-use super::{ Vertex, RenderData, Material, Texture };
+use super::{ Vertex, RenderData, Material };
 
 #[derive(Clone)]
 pub struct Mesh {
     render_data: RenderData,
     indices_count: u16,
     material: Material,
-    // textures: Vec<Texture>,
 }
 impl Mesh {
     pub fn from_obj(model: &obj::Obj<TexturedVertex, u16>) -> Self {
@@ -32,5 +31,4 @@ impl Mesh {
     pub fn indices_count(&self) -> u16 { self.indices_count }
     pub fn material(&self) -> &Material { &self.material }
     pub fn set_material(&mut self, value: Material) { self.material = value; }
-    //pub fn textures(&self) -> &Vec<Texture> { &self.textures }
 }

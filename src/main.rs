@@ -8,7 +8,7 @@ use rand::Rng;
 
 use cgmath::prelude::InnerSpace;
 use cgmath::{ Matrix4, Vector3, vec3 };
-use objects::{ Mesh, RenderObject, Camera, Texture, ViewPort, Material, Light, LightType, obj_loader };
+use objects::{ Mesh, RenderObject, Camera, ViewPort, Light, LightType, obj_loader };
 
 use glutin;
 use glutin::window;
@@ -64,8 +64,8 @@ fn main() {
     // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/Cube/Model.mtl").to_str().unwrap();
 
-    let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
-    let material_path = Path::new("Models/Sphere/Model.mtl").to_str().unwrap();
+    // let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/Sphere/Model.mtl").to_str().unwrap();
 
     // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TEXT/Model.mtl").to_str().unwrap();
@@ -73,22 +73,14 @@ fn main() {
     // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
 
+    let model_path = Path::new("Models/TexturedSphere/Model.obj").to_str().unwrap();
+    let material_path = Path::new("Models/TexturedSphere/Model.mtl").to_str().unwrap();
+
     let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
 
     let light_model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     let light_mesh: Mesh = obj_loader::load_model(light_model_path);
 
-    // // Загрузка текстур
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
-    // let texture3 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
-    // let texture_loadresult = Texture::from_file(Path::new("Pictures/Plite.png").to_str().unwrap());
-    // let light_map3 = match texture_loadresult {
-    //     Ok(texture) => texture,
-    //     Err(err) => { println!("{}", err); return }
-    // };
 
     let mut view_port = ViewPort::new();
 
@@ -102,13 +94,10 @@ fn main() {
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
     render_objects.push(rend_obj);
     
-    for i in 1..30 {
+    for i in 1..10 {
         let mut new_object = RenderObject::from_mesh(mesh.clone());
-
-        //new_object.set_texture(texture3.clone());
         new_object.set_position(generate_vector());
         new_object.set_scale((generate_float() / 100.0) + 0.5);
-
         render_objects.push(new_object);
     }
     // ---------------------------------------------------
@@ -134,24 +123,24 @@ fn main() {
     // new_object.set_light_type(LightType::Directional);
     // light_objects.push(new_object);
 
-    // // Статичные светильники
-    // for i in 1..15 {
-    //     let mut new_object = Light::new();
-    //     new_object.set_position(generate_vector());
-    //     new_object.set_scale(0.2);
+    // Статичные светильники
+    for i in 1..15 {
+        let mut new_object = Light::new();
+        new_object.set_position(generate_vector());
+        new_object.set_scale(0.2);
 
-    //     new_object.set_ambient(generate_normal_vector());
-    //     new_object.set_diffuse(generate_normal_vector());
-    //     new_object.set_specular(generate_normal_vector());
+        new_object.set_ambient(generate_normal_vector());
+        new_object.set_diffuse(generate_normal_vector());
+        new_object.set_specular(generate_normal_vector());
 
-    //     new_object.set_constant(1.0);
-    //     new_object.set_linear(0.022);
-    //     new_object.set_quadratic(0.0019);
+        new_object.set_constant(1.0);
+        new_object.set_linear(0.022);
+        new_object.set_quadratic(0.0019);
         
-    //     new_object.set_light_type(LightType::Point);
-    //     new_object.set_mesh(light_mesh.clone());
-    //     light_objects.push(new_object);
-    // }
+        new_object.set_light_type(LightType::Point);
+        new_object.set_mesh(light_mesh.clone());
+        light_objects.push(new_object);
+    }
 
     // Динамические светильники
     for i in 1..15 {
@@ -439,8 +428,6 @@ fn main() {
                 shader_program.use_();
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
                 else { shader_program.set_uniform_int("wire_mode", 1); }
-                shader_program.set_uniform_int("material.diffuse", 0);
-                shader_program.set_uniform_int("material.specular", 1);
 
                 view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light_objects);
                 windowed_context.swap_buffers().unwrap();

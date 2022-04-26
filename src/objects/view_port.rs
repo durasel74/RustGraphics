@@ -1,5 +1,4 @@
 use gl;
-use cgmath::{ Vector3, vec3 };
 use super::{ RenderObject, ShaderProgram, Camera, Light, LightType };
 
 pub struct ViewPort {
@@ -26,12 +25,12 @@ impl ViewPort {
         unsafe { gl::Viewport(self.position.0, self.position.1, self.size.0, self.size.1); }
         camera.set_view_size((self.size.0 as f32, self.size.1 as f32));
         self.configure_light(shader_program, light_objects);
-        self.draw_render_objects(shader_program, camera, render_objects, light_objects);
+        self.draw_render_objects(shader_program, camera, render_objects);
         self.draw_light_objects(light_shader_program, camera, light_objects);
     }
 
     fn draw_render_objects(&self, shader_program: &ShaderProgram, camera: &mut Camera, 
-    render_objects: &Vec<RenderObject>, light_objects: &Vec<Light>) {
+    render_objects: &Vec<RenderObject>) {
         shader_program.set_uniform_matrix4("view", &camera.view_matrix());
         shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
 
@@ -46,24 +45,25 @@ impl ViewPort {
             shader_program.set_uniform_float("material.shininess", current_object.mesh().material().specular_exponent);
 
             unsafe {
-                // match current_object.texture() {
-                //     Some(texture) => {
-                //         gl::ActiveTexture(gl::TEXTURE0);
-                //         gl::BindTexture(gl::TEXTURE_2D, texture.id);
-                //     },
-                //     None => ()
-                // }
-                // match current_object.light_map() {
-                //     Some(texture) => {
-                //         gl::ActiveTexture(gl::TEXTURE1);
-                //         gl::BindTexture(gl::TEXTURE_2D, texture.id);
-                //     },
-                //     None => ()
-                // }
+                match &current_object.mesh().material().diff_tex {
+                    Some(texture) => {
+                        shader_program.set_uniform_int("texture_diffuse", 0);
+                        gl::ActiveTexture(gl::TEXTURE0);
+                        gl::BindTexture(gl::TEXTURE_2D, texture.id);
+                    },
+                    None => ()
+                }
+                match &current_object.mesh().material().spec_tex {
+                    Some(texture) => {
+                        shader_program.set_uniform_int("texture_specular", 1);
+                        gl::ActiveTexture(gl::TEXTURE1);
+                        gl::BindTexture(gl::TEXTURE_2D, texture.id);
+                    },
+                    None => ()
+                }
 
                 gl::BindVertexArray(current_object.mesh().render_data().vao);
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
-                // gl::DrawArrays(gl::TRIANGLES, 0, (current_object.mesh().vertices().len() / 8) as i32);
                 gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices_count() as i32,
                     gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
             }
@@ -86,7 +86,6 @@ impl ViewPort {
                     unsafe {
                         gl::BindVertexArray(mesh.render_data().vao);
                         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
-                        // gl::DrawArrays(gl::TRIANGLES, 0, (mesh.vertices().len() / 8) as i32);
                         gl::DrawElements(gl::TRIANGLES, mesh.indices_count() as i32,
                             gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
                     }
