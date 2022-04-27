@@ -65,7 +65,7 @@ impl ViewPort {
                 gl::BindVertexArray(current_object.mesh().render_data().vao);
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
                 gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices_count() as i32,
-                    gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
+                    gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
             }
         }
     }
@@ -87,7 +87,7 @@ impl ViewPort {
                         gl::BindVertexArray(mesh.render_data().vao);
                         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
                         gl::DrawElements(gl::TRIANGLES, mesh.indices_count() as i32,
-                            gl::UNSIGNED_SHORT, 0 as *const gl::types::GLvoid);
+                            gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
                     }
                 },
                 _ => (),

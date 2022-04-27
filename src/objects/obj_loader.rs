@@ -14,7 +14,7 @@ pub fn load_with_paths(model_path: &str, material_path: &str) -> Mesh {
 
 pub fn load_model(model_path: &str) -> Mesh {
     let input = BufReader::new(File::open(model_path).unwrap());
-    let obj_model: Obj<TexturedVertex, u16> = load_obj(input).unwrap();
+    let obj_model: Obj<TexturedVertex, u32> = load_obj(input).unwrap();
     Mesh::from_obj(&obj_model)
 }
 

@@ -5,11 +5,11 @@ use super::{ Vertex, RenderData, Material };
 #[derive(Clone)]
 pub struct Mesh {
     render_data: RenderData,
-    indices_count: u16,
+    indices_count: u32,
     material: Material,
 }
 impl Mesh {
-    pub fn from_obj(model: &obj::Obj<TexturedVertex, u16>) -> Self {
+    pub fn from_obj(model: &obj::Obj<TexturedVertex, u32>) -> Self {
         let obj_vertices = &model.vertices;
         let obj_indices = &model.indices;
 
@@ -21,14 +21,14 @@ impl Mesh {
             let vertex = Vertex { position: pos, normal: norm, tex_coords: tex };
             vertices.push(vertex);
         }
-        let render_data = RenderData::from_verteices(&vertices, obj_indices);
-        let indices_count = obj_indices.len() as u16;
+        let render_data = RenderData::from_vertices(&vertices, obj_indices);
+        let indices_count = obj_indices.len() as u32;
         let material = Material::new();
         Mesh { render_data, indices_count, material }
     }
 
     pub fn render_data(&self) -> &RenderData { &self.render_data }
-    pub fn indices_count(&self) -> u16 { self.indices_count }
+    pub fn indices_count(&self) -> u32 { self.indices_count }
     pub fn material(&self) -> &Material { &self.material }
     pub fn set_material(&mut self, value: Material) { self.material = value; }
 }

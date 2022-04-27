@@ -9,7 +9,7 @@ pub struct RenderData {
     pub ebo: GLuint,
 }
 impl RenderData {
-    pub fn from_verteices(vertices: &Vec<Vertex>, indices: &Vec<u16>) -> Self {
+    pub fn from_vertices(vertices: &Vec<Vertex>, indices: &Vec<u32>) -> Self {
         let vbo = Self::create_vbo(vertices);
         let vao = Self::create_vao(vbo);
         let ebo = Self::create_ebo(indices);
@@ -61,14 +61,14 @@ impl RenderData {
         vao
     }
 
-    pub fn create_ebo(indices: &Vec<u16>) -> GLuint {
+    pub fn create_ebo(indices: &Vec<u32>) -> GLuint {
         let mut ebo: GLuint = 0;
         unsafe { gl::GenBuffers(1, &mut ebo); }
         unsafe {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
-                (indices.len() * std::mem::size_of::<u16>()) as GLsizeiptr,
+                (indices.len() * std::mem::size_of::<u32>()) as GLsizeiptr,
                 indices.as_ptr() as *const GLvoid,
                 gl::STATIC_DRAW,
             );

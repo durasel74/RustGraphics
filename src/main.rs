@@ -73,8 +73,8 @@ fn main() {
     // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
 
-    let model_path = Path::new("Models/TexturedSphere/Model.obj").to_str().unwrap();
-    let material_path = Path::new("Models/TexturedSphere/Model.mtl").to_str().unwrap();
+    let model_path = Path::new("Models/TestTextured/Model.obj").to_str().unwrap();
+    let material_path = Path::new("Models/TestTextured/Model.mtl").to_str().unwrap();
 
     let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
 
@@ -94,12 +94,12 @@ fn main() {
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
     render_objects.push(rend_obj);
     
-    for i in 1..10 {
-        let mut new_object = RenderObject::from_mesh(mesh.clone());
-        new_object.set_position(generate_vector());
-        new_object.set_scale((generate_float() / 100.0) + 0.5);
-        render_objects.push(new_object);
-    }
+    // for i in 1..40 {
+    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
+    //     new_object.set_position(generate_vector());
+    //     new_object.set_scale((generate_float() / 100.0) + 0.5);
+    //     render_objects.push(new_object);
+    // }
     // ---------------------------------------------------
 
 
@@ -123,24 +123,24 @@ fn main() {
     // new_object.set_light_type(LightType::Directional);
     // light_objects.push(new_object);
 
-    // Статичные светильники
-    for i in 1..15 {
-        let mut new_object = Light::new();
-        new_object.set_position(generate_vector());
-        new_object.set_scale(0.2);
+    // // Статичные светильники
+    // for i in 1..15 {
+    //     let mut new_object = Light::new();
+    //     new_object.set_position(generate_vector());
+    //     new_object.set_scale(0.2);
 
-        new_object.set_ambient(generate_normal_vector());
-        new_object.set_diffuse(generate_normal_vector());
-        new_object.set_specular(generate_normal_vector());
+    //     new_object.set_ambient(generate_normal_vector());
+    //     new_object.set_diffuse(generate_normal_vector());
+    //     new_object.set_specular(generate_normal_vector());
 
-        new_object.set_constant(1.0);
-        new_object.set_linear(0.022);
-        new_object.set_quadratic(0.0019);
+    //     new_object.set_constant(1.0);
+    //     new_object.set_linear(0.022);
+    //     new_object.set_quadratic(0.0019);
         
-        new_object.set_light_type(LightType::Point);
-        new_object.set_mesh(light_mesh.clone());
-        light_objects.push(new_object);
-    }
+    //     new_object.set_light_type(LightType::Point);
+    //     new_object.set_mesh(light_mesh.clone());
+    //     light_objects.push(new_object);
+    // }
 
     // Динамические светильники
     for i in 1..15 {
