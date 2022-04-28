@@ -61,6 +61,10 @@ fn main() {
     };
 
     // Загрузка моделей
+    let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
+    let plane_material_path = Path::new("Models/Plane/Model.mtl").to_str().unwrap();
+    let plane_mesh: Mesh = obj_loader::load_with_paths(plane_model_path, plane_material_path);
+
     // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/Cube/Model.mtl").to_str().unwrap();
 
@@ -70,11 +74,11 @@ fn main() {
     // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TEXT/Model.mtl").to_str().unwrap();
 
-    // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
+    let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
+    let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
 
-    let model_path = Path::new("Models/TestTextured/Model.obj").to_str().unwrap();
-    let material_path = Path::new("Models/TestTextured/Model.mtl").to_str().unwrap();
+    // let model_path = Path::new("Models/TestTextured/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/TestTextured/Model.mtl").to_str().unwrap();
 
     let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
 
@@ -87,11 +91,16 @@ fn main() {
     let mut camera = Camera::new();
     camera.set_is_look_at(false);
     camera.set_is_ortho(false);
-    camera.set_position(vec3(0.0, 0.0, 1.0));
+    camera.set_position(vec3(2.0, 1.0, 0.0));
 
     // ----- Рандомные модели ------
     let mut render_objects: Vec<RenderObject> = vec![];
+    let plane = RenderObject::from_mesh(plane_mesh);
+    render_objects.push(plane);
+
     let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    rend_obj.set_position(vec3(0.0, 0.5, 0.0));
+    rend_obj.set_rotation(vec3(-36.0, 0.0, 0.0));
     render_objects.push(rend_obj);
     
     // for i in 1..40 {
@@ -106,22 +115,22 @@ fn main() {
     // ----- Рандомные светильники ------
     let mut light_objects: Vec<Light> = vec![];
 
+    // let mut new_object = Light::new();
+    // new_object.set_ambient(vec3(0.0, 0.0, 0.0));
+    // new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
+    // new_object.set_specular(vec3(1.0, 1.0, 1.0));
+    // new_object.set_cut_off(15.0);
+    // new_object.set_outer_cut_off(25.0);
+    // new_object.set_light_type(LightType::Spotlight);
+    // light_objects.push(new_object);
+
     let mut new_object = Light::new();
-    new_object.set_ambient(vec3(0.0, 0.0, 0.0));
+    new_object.set_direction(vec3(4.0, -5.0, -4.0));
+    new_object.set_ambient(vec3(0.2, 0.2, 0.2));
     new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
     new_object.set_specular(vec3(1.0, 1.0, 1.0));
-    new_object.set_cut_off(15.0);
-    new_object.set_outer_cut_off(25.0);
-    new_object.set_light_type(LightType::Spotlight);
+    new_object.set_light_type(LightType::Directional);
     light_objects.push(new_object);
-
-    // let mut new_object = Light::new();
-    // new_object.set_direction(vec3(4.0, -5.0, -4.0));
-    // new_object.set_ambient(vec3(0.0, 0.0, 0.0));
-    // new_object.set_diffuse(vec3(0.7, 0.7, 0.7));
-    // new_object.set_specular(vec3(0.9, 0.9, 0.9));
-    // new_object.set_light_type(LightType::Directional);
-    // light_objects.push(new_object);
 
     // // Статичные светильники
     // for i in 1..15 {
@@ -142,25 +151,25 @@ fn main() {
     //     light_objects.push(new_object);
     // }
 
-    // Динамические светильники
-    for i in 1..15 {
-        let mut new_object = Light::new();
-        new_object.set_position(generate_vector());
-        new_object.set_scale(0.2);
-        new_object.set_radius(generate_float() / 2.0);
+    // // Динамические светильники
+    // for i in 1..15 {
+    //     let mut new_object = Light::new();
+    //     new_object.set_position(generate_vector());
+    //     new_object.set_scale(0.2);
+    //     new_object.set_radius(generate_float() / 2.0);
 
-        new_object.set_ambient(generate_normal_vector());
-        new_object.set_diffuse(generate_normal_vector());
-        new_object.set_specular(generate_normal_vector());
+    //     new_object.set_ambient(generate_normal_vector());
+    //     new_object.set_diffuse(generate_normal_vector());
+    //     new_object.set_specular(generate_normal_vector());
 
-        new_object.set_constant(1.0);
-        new_object.set_linear(0.022);
-        new_object.set_quadratic(0.0019);
+    //     new_object.set_constant(1.0);
+    //     new_object.set_linear(0.022);
+    //     new_object.set_quadratic(0.0019);
         
-        new_object.set_light_type(LightType::Point);
-        new_object.set_mesh(light_mesh.clone());
-        light_objects.push(new_object);
-    }
+    //     new_object.set_light_type(LightType::Point);
+    //     new_object.set_mesh(light_mesh.clone());
+    //     light_objects.push(new_object);
+    // }
     // ---------------------------------------------------
 
     let now = time::Instant::now();
@@ -196,7 +205,7 @@ fn main() {
 
     // Первоначальная настройка пайплайна
     unsafe { 
-        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+        gl::ClearColor(0.2, 0.2, 0.2, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
@@ -346,8 +355,9 @@ fn main() {
                     ));
                 }
 
-                light_objects[0].set_direction(-camera.direction());
-                light_objects[0].set_position(camera.position());
+                // // Движение фонаря за камерой
+                // light_objects[0].set_direction(-camera.direction());
+                // light_objects[0].set_position(camera.position());
 
                 // Вращение по кругу
                 let elapsed_time = now.elapsed();

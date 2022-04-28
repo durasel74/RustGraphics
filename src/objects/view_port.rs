@@ -51,7 +51,10 @@ impl ViewPort {
                         gl::ActiveTexture(gl::TEXTURE0);
                         gl::BindTexture(gl::TEXTURE_2D, texture.id);
                     },
-                    None => ()
+                    None => {
+                        gl::ActiveTexture(gl::TEXTURE0);
+                        gl::BindTexture(gl::TEXTURE_2D, 0);
+                    }
                 }
                 match &current_object.mesh().material().spec_tex {
                     Some(texture) => {
@@ -59,7 +62,10 @@ impl ViewPort {
                         gl::ActiveTexture(gl::TEXTURE1);
                         gl::BindTexture(gl::TEXTURE_2D, texture.id);
                     },
-                    None => ()
+                    None => {
+                        gl::ActiveTexture(gl::TEXTURE1);
+                        gl::BindTexture(gl::TEXTURE_2D, 0);
+                    }
                 }
 
                 gl::BindVertexArray(current_object.mesh().render_data().vao);
