@@ -74,16 +74,47 @@ fn main() {
     // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TEXT/Model.mtl").to_str().unwrap();
 
-    let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
-    let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
+    // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
 
     // let model_path = Path::new("Models/TestTextured/Model.obj").to_str().unwrap();
     // let material_path = Path::new("Models/TestTextured/Model.mtl").to_str().unwrap();
 
-    let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
+    // let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/KabutoKatana/Model.mtl").to_str().unwrap();
+
+    // let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
+
+
+    // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/Cube/Model.mtl").to_str().unwrap();
+    // let mesh1: Mesh = obj_loader::load_with_paths(model_path, material_path);
+
+    // let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/Sphere/Model.mtl").to_str().unwrap();
+    // let mesh2: Mesh = obj_loader::load_with_paths(model_path, material_path);
+
+    // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/TEXT/Model.mtl").to_str().unwrap();
+    // let mesh3: Mesh = obj_loader::load_with_paths(model_path, material_path);
+
+    // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
+    // let mesh4: Mesh = obj_loader::load_with_paths(model_path, material_path);
+
+    let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
+    let material_path = Path::new("Models/TestGroups/Model.mtl").to_str().unwrap();
+    let mesh5: Mesh = obj_loader::load_with_paths(model_path, material_path);
+
+    // let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
+    // let material_path = Path::new("Models/KabutoKatana/Model.mtl").to_str().unwrap();
+    // let mesh6: Mesh = obj_loader::load_with_paths(model_path, material_path);
+
+
+
 
     let light_model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
-    let light_mesh: Mesh = obj_loader::load_model(light_model_path);
+    let light_mesh: Mesh = obj_loader::load_model_old(light_model_path);
 
 
     let mut view_port = ViewPort::new();
@@ -98,10 +129,66 @@ fn main() {
     let plane = RenderObject::from_mesh(plane_mesh);
     render_objects.push(plane);
 
-    let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    rend_obj.set_position(vec3(0.0, 0.5, 0.0));
-    rend_obj.set_rotation(vec3(-36.0, 0.0, 0.0));
+    // let mut rend_obj = RenderObject::from_mesh(mesh1);
+    // rend_obj.set_position(vec3(0.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // let mut rend_obj = RenderObject::from_mesh(mesh2);
+    // rend_obj.set_position(vec3(5.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // let mut rend_obj = RenderObject::from_mesh(mesh3);
+    // rend_obj.set_position(vec3(-5.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // let mut rend_obj = RenderObject::from_mesh(mesh4);
+    // rend_obj.set_position(vec3(10.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    let mut rend_obj = RenderObject::from_mesh(mesh5);
+    rend_obj.set_position(vec3(2.0, 1.0, 0.0));
     render_objects.push(rend_obj);
+
+    // let mut rend_obj = RenderObject::from_mesh(mesh6);
+    // rend_obj.set_position(vec3(0.0, 1.0, 10.0));
+    // render_objects.push(rend_obj);
+
+
+
+    // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(5.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(-5.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(10.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(-2.0, 1.0, 0.0));
+    render_objects.push(rend_obj);
+
+    // let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 1.0, 10.0));
+    // render_objects.push(rend_obj);
+
+    // let mut rend_obj = RenderObject::from_mesh(mesh.clone());
+    // rend_obj.set_position(vec3(0.0, 0.5, 0.0));
+    // rend_obj.set_rotation(vec3(-36.0, 0.0, 0.0));
+    // render_objects.push(rend_obj);
     
     // for i in 1..40 {
     //     let mut new_object = RenderObject::from_mesh(mesh.clone());

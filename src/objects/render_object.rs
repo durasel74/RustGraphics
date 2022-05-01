@@ -1,11 +1,12 @@
 use cgmath::{ Matrix, SquareMatrix, Matrix3, Matrix4, Vector3, vec3, Rad };
 use super::{ Mesh };
 
+#[derive(Clone)]
 pub struct RenderObject {
     position: Vector3<f32>,
     rotation: Vector3<f32>,
     scale: f32,
-    mesh: Mesh
+    meshes: Vec<Mesh>
 }
 impl RenderObject {
     pub fn from_mesh(mesh: Mesh) -> Self {
@@ -13,7 +14,16 @@ impl RenderObject {
             position: vec3(0.0, 0.0, 0.0), 
             rotation: vec3(0.0, 0.0, 0.0), 
             scale: 1.0,
-            mesh
+            meshes: vec![mesh]
+        }
+    }
+
+    pub fn from_meshes(meshes: Vec<Mesh>) -> Self {
+        RenderObject { 
+            position: vec3(0.0, 0.0, 0.0), 
+            rotation: vec3(0.0, 0.0, 0.0), 
+            scale: 1.0,
+            meshes
         }
     }
 
@@ -23,8 +33,8 @@ impl RenderObject {
     pub fn set_rotation(&mut self, value: Vector3<f32>) { self.rotation = value } 
     pub fn scale(&self) -> f32 { self.scale }
     pub fn set_scale(&mut self, value: f32) { self.scale = value }
-    pub fn mesh(&self) -> &Mesh { &self.mesh }
-    pub fn set_mesh(&mut self, value: Mesh) { self.mesh = value; }
+    pub fn meshes(&self) -> &Vec<Mesh> { &self.meshes }
+    pub fn set_meshes(&mut self, value: Vec<Mesh>) { self.meshes = value; }
 
     pub fn transform_matrix(&self) -> Matrix4<f32> {
         let pos_matrix = Matrix4::from_translation(self.position.clone());

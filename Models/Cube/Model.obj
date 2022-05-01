@@ -1,6 +1,6 @@
 # Blender v2.80 (sub 75) OBJ File: 'TestSmooth.blend'
 # www.blender.org
-mtllib Cube.mtl
+mtllib Model.mtl
 o Cube_Cube.001
 v -1.000000 -1.000000 1.000000
 v -1.000000 1.000000 1.000000
