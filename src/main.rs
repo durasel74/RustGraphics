@@ -91,11 +91,6 @@ fn main() {
     // rend_obj.set_position(vec3(5.0, 1.0, 0.0));
     // render_objects.push(rend_obj);
 
-    // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
-    // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(-5.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
     // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
     // let mut rend_obj = obj_loader::load_model(model_path);
     // rend_obj.set_position(vec3(10.0, 1.0, 0.0));
@@ -147,6 +142,7 @@ fn main() {
     let now = time::Instant::now();
     let mut old_since_time = now.elapsed().as_secs_f32();
 
+    let mut window_is_focused = true;
     let mut is_fullscreen = false;
     let mut draw_mode = 0;
     let sensitivity = 3.0;
@@ -192,119 +188,133 @@ fn main() {
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = event_loop::ControlFlow::Poll;
-
         match event {
             event::Event::LoopDestroyed => return,
-            event::Event::WindowEvent { event, .. } =>
-                window_event_handler(event, control_flow),
-            event::Event::DeviceEvent { event, .. } => {
+            event::Event::WindowEvent { event, .. } => {
                 match event {
-                    event::DeviceEvent::Key(keyboard_input) => match keyboard_input {
-                        event::KeyboardInput { scancode: 1, state: event::ElementState::Released, .. } => 
-                            *control_flow = event_loop::ControlFlow::Exit,
-                        event::KeyboardInput { scancode: 15, state: event::ElementState::Released, .. } => 
-                            draw_mode = (draw_mode + 1) % 3,
-                        event::KeyboardInput { scancode: 28, state: event::ElementState::Released, .. } => 
-                        {
-                            if !is_fullscreen {
-                                windowed_context.window().set_cursor_grab(true).unwrap();
-                                windowed_context.window().set_cursor_visible(false);
-                                windowed_context.window().set_fullscreen(Some(fullscreen.clone()));
-                                is_fullscreen = true;
-                            }
-                            else {
-                                windowed_context.window().set_cursor_grab(false).unwrap();
-                                windowed_context.window().set_cursor_visible(true);
-                                windowed_context.window().set_fullscreen(None);
-                                is_fullscreen = false;
-                            }
-                        },
-                        event::KeyboardInput { scancode: 25, state: event::ElementState::Released, ..} =>
-                        {
-                            if camera.is_ortho() { camera.set_is_ortho(false); }
-                            else { camera.set_is_ortho(true); }
-                        },
-
-                        event::KeyboardInput { scancode: 38, state: event::ElementState::Released, .. } => 
-                            is_look_at = !is_look_at,
-
-                        event::KeyboardInput { scancode: 17, state: event::ElementState::Released, ..} =>
-                            forward = false,
-                        event::KeyboardInput { scancode: 31, state: event::ElementState::Released, ..} =>
-                            back = false,
-                        event::KeyboardInput { scancode: 30, state: event::ElementState::Released, ..} =>
-                            left = false,
-                        event::KeyboardInput { scancode: 32, state: event::ElementState::Released, ..} =>
-                            right = false,
-                        event::KeyboardInput { scancode: 29, state: event::ElementState::Released, ..} =>
-                            down = false,
-                        event::KeyboardInput { scancode: 57, state: event::ElementState::Released, ..} =>
-                            up = false,
-                        event::KeyboardInput { scancode: 57416, state: event::ElementState::Released, ..} =>
-                            is_light_togle = !is_light_togle,
-                        event::KeyboardInput { scancode: 57424, state: event::ElementState::Released, ..} =>
-                            is_half_light = !is_half_light,
-                        event::KeyboardInput { scancode: 42, state: event::ElementState::Released, ..} =>
-                            { 
-                                current_speed_step = normal_speed_step; 
-                                current_max_speed = max_normal_speed;
-                            },
-                        event::KeyboardInput { scancode: 72, state: event::ElementState::Released, ..} =>
-                            camera_up = false,
-                        event::KeyboardInput { scancode: 80, state: event::ElementState::Released, ..} =>
-                            camera_down = false,
-                        event::KeyboardInput { scancode: 75, state: event::ElementState::Released, ..} =>
-                            camera_left = false,
-                        event::KeyboardInput { scancode: 77, state: event::ElementState::Released, ..} =>
-                            camera_right = false,
-
-
-                        event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
-                            forward = true,
-                        event::KeyboardInput { scancode: 31, state: event::ElementState::Pressed, ..} =>
-                            back = true,
-                        event::KeyboardInput { scancode: 30, state: event::ElementState::Pressed, ..} =>
-                            left = true,
-                        event::KeyboardInput { scancode: 32, state: event::ElementState::Pressed, ..} =>
-                            right = true,
-                        event::KeyboardInput { scancode: 29, state: event::ElementState::Pressed, ..} =>
-                            down = true,
-                        event::KeyboardInput { scancode: 57, state: event::ElementState::Pressed, ..} =>
-                            up = true,
-                        event::KeyboardInput { scancode: 42, state: event::ElementState::Pressed, ..} =>
-                            {
-                                current_speed_step = fast_speed_step;
-                                current_max_speed = max_fast_speed;
-                            },
-                        event::KeyboardInput { scancode: 72, state: event::ElementState::Pressed, ..} =>
-                            camera_up = true,
-                        event::KeyboardInput { scancode: 80, state: event::ElementState::Pressed, ..} =>
-                            camera_down = true,
-                        event::KeyboardInput { scancode: 75, state: event::ElementState::Pressed, ..} =>
-                            camera_left = true,
-                        event::KeyboardInput { scancode: 77, state: event::ElementState::Pressed, ..} =>
-                            camera_right = true,
-                        event::KeyboardInput { scancode: 78, state: event::ElementState::Pressed, ..} =>
-                            camera_speed += 0.1,
-                        event::KeyboardInput { scancode: 74, state: event::ElementState::Pressed, ..} =>
-                            { camera_speed -= 0.1; if camera_speed < 0.0 { camera_speed = 0.0 } },
-                        
-                        // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
-                        _ => ()
+                    event::WindowEvent::CloseRequested =>
+                        *control_flow = event_loop::ControlFlow::Exit,
+                    event::WindowEvent::Resized(physical_size) => unsafe {
+                        let view_width = physical_size.width as i32;
+                        let view_height = physical_size.height as i32;
+                        view_port.set_position((0, 0));
+                        view_port.set_size((view_width, view_height));
                     },
-
-                    event::DeviceEvent::MouseMotion { delta } =>
-                    {
-                        delta_x = delta.0;
-                        delta_y = delta.1;
-                        //println!("{} {}", delta_x, delta_y);
-                    },
-                    event::DeviceEvent::MouseWheel { delta } => match delta {
-                        event::MouseScrollDelta::LineDelta(_, y) => 
-                            camera.set_ortho_factor(camera.ortho_factor() - y),
-                        _ => (),
-                    },
+                    event::WindowEvent::Focused(is_focus) => 
+                        window_is_focused = is_focus,
                     _ => ()
+                }
+            },
+            event::Event::DeviceEvent { event, .. } => {
+                if (window_is_focused) {
+                    match event {
+                        event::DeviceEvent::Key(keyboard_input) => match keyboard_input {
+                            event::KeyboardInput { scancode: 1, state: event::ElementState::Released, .. } => 
+                                *control_flow = event_loop::ControlFlow::Exit,
+                            event::KeyboardInput { scancode: 15, state: event::ElementState::Released, .. } => 
+                                draw_mode = (draw_mode + 1) % 3,
+                            event::KeyboardInput { scancode: 28, state: event::ElementState::Released, .. } => 
+                            {
+                                if !is_fullscreen {
+                                    windowed_context.window().set_cursor_grab(true).unwrap();
+                                    windowed_context.window().set_cursor_visible(false);
+                                    windowed_context.window().set_fullscreen(Some(fullscreen.clone()));
+                                    is_fullscreen = true;
+                                }
+                                else {
+                                    windowed_context.window().set_cursor_grab(false).unwrap();
+                                    windowed_context.window().set_cursor_visible(true);
+                                    windowed_context.window().set_fullscreen(None);
+                                    is_fullscreen = false;
+                                }
+                            },
+                            event::KeyboardInput { scancode: 25, state: event::ElementState::Released, ..} =>
+                            {
+                                if camera.is_ortho() { camera.set_is_ortho(false); }
+                                else { camera.set_is_ortho(true); }
+                            },
+
+                            event::KeyboardInput { scancode: 38, state: event::ElementState::Released, .. } => 
+                                is_look_at = !is_look_at,
+
+                            event::KeyboardInput { scancode: 17, state: event::ElementState::Released, ..} =>
+                                forward = false,
+                            event::KeyboardInput { scancode: 31, state: event::ElementState::Released, ..} =>
+                                back = false,
+                            event::KeyboardInput { scancode: 30, state: event::ElementState::Released, ..} =>
+                                left = false,
+                            event::KeyboardInput { scancode: 32, state: event::ElementState::Released, ..} =>
+                                right = false,
+                            event::KeyboardInput { scancode: 29, state: event::ElementState::Released, ..} =>
+                                down = false,
+                            event::KeyboardInput { scancode: 57, state: event::ElementState::Released, ..} =>
+                                up = false,
+                            event::KeyboardInput { scancode: 57416, state: event::ElementState::Released, ..} =>
+                                is_light_togle = !is_light_togle,
+                            event::KeyboardInput { scancode: 57424, state: event::ElementState::Released, ..} =>
+                                is_half_light = !is_half_light,
+                            event::KeyboardInput { scancode: 42, state: event::ElementState::Released, ..} =>
+                                { 
+                                    current_speed_step = normal_speed_step; 
+                                    current_max_speed = max_normal_speed;
+                                },
+                            event::KeyboardInput { scancode: 72, state: event::ElementState::Released, ..} =>
+                                camera_up = false,
+                            event::KeyboardInput { scancode: 80, state: event::ElementState::Released, ..} =>
+                                camera_down = false,
+                            event::KeyboardInput { scancode: 75, state: event::ElementState::Released, ..} =>
+                                camera_left = false,
+                            event::KeyboardInput { scancode: 77, state: event::ElementState::Released, ..} =>
+                                camera_right = false,
+
+
+                            event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
+                                forward = true,
+                            event::KeyboardInput { scancode: 31, state: event::ElementState::Pressed, ..} =>
+                                back = true,
+                            event::KeyboardInput { scancode: 30, state: event::ElementState::Pressed, ..} =>
+                                left = true,
+                            event::KeyboardInput { scancode: 32, state: event::ElementState::Pressed, ..} =>
+                                right = true,
+                            event::KeyboardInput { scancode: 29, state: event::ElementState::Pressed, ..} =>
+                                down = true,
+                            event::KeyboardInput { scancode: 57, state: event::ElementState::Pressed, ..} =>
+                                up = true,
+                            event::KeyboardInput { scancode: 42, state: event::ElementState::Pressed, ..} =>
+                                {
+                                    current_speed_step = fast_speed_step;
+                                    current_max_speed = max_fast_speed;
+                                },
+                            event::KeyboardInput { scancode: 72, state: event::ElementState::Pressed, ..} =>
+                                camera_up = true,
+                            event::KeyboardInput { scancode: 80, state: event::ElementState::Pressed, ..} =>
+                                camera_down = true,
+                            event::KeyboardInput { scancode: 75, state: event::ElementState::Pressed, ..} =>
+                                camera_left = true,
+                            event::KeyboardInput { scancode: 77, state: event::ElementState::Pressed, ..} =>
+                                camera_right = true,
+                            event::KeyboardInput { scancode: 78, state: event::ElementState::Pressed, ..} =>
+                                camera_speed += 0.1,
+                            event::KeyboardInput { scancode: 74, state: event::ElementState::Pressed, ..} =>
+                                { camera_speed -= 0.1; if camera_speed < 0.0 { camera_speed = 0.0 } },
+                            
+                            // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
+                            _ => ()
+                        },
+
+                        event::DeviceEvent::MouseMotion { delta } =>
+                        {
+                            delta_x = delta.0;
+                            delta_y = delta.1;
+                            //println!("{} {}", delta_x, delta_y);
+                        },
+                        event::DeviceEvent::MouseWheel { delta } => match delta {
+                            event::MouseScrollDelta::LineDelta(_, y) => 
+                                camera.set_ortho_factor(camera.ortho_factor() - y),
+                            _ => (),
+                        },
+                        _ => ()
+                    }
                 }
             }
             event::Event::MainEventsCleared => {
@@ -443,18 +453,6 @@ fn main() {
             _ => (),
         }
     });
-}
-
-fn window_event_handler(event: event::WindowEvent,
-control_flow: &mut event_loop::ControlFlow) {
-    match event {
-        event::WindowEvent::CloseRequested =>
-            *control_flow = event_loop::ControlFlow::Exit,
-        event::WindowEvent::Resized(physical_size) => unsafe {
-            //gl::Viewport(0, 0, physical_size.width as i32, physical_size.height as i32);
-        },
-        _ => ()
-    }
 }
 
 fn to_draw_mode(value: u32) -> gl::types::GLenum {
