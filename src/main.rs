@@ -65,54 +65,6 @@ fn main() {
     let plane_material_path = Path::new("Models/Plane/Model.mtl").to_str().unwrap();
     let plane_mesh: Mesh = obj_loader::load_with_paths(plane_model_path, plane_material_path);
 
-    // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/Cube/Model.mtl").to_str().unwrap();
-
-    // let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/Sphere/Model.mtl").to_str().unwrap();
-
-    // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/TEXT/Model.mtl").to_str().unwrap();
-
-    // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
-
-    // let model_path = Path::new("Models/TestTextured/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/TestTextured/Model.mtl").to_str().unwrap();
-
-    // let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/KabutoKatana/Model.mtl").to_str().unwrap();
-
-    // let mesh: Mesh = obj_loader::load_with_paths(model_path, material_path);
-
-
-    // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/Cube/Model.mtl").to_str().unwrap();
-    // let mesh1: Mesh = obj_loader::load_with_paths(model_path, material_path);
-
-    // let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/Sphere/Model.mtl").to_str().unwrap();
-    // let mesh2: Mesh = obj_loader::load_with_paths(model_path, material_path);
-
-    // let model_path = Path::new("Models/TEXT/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/TEXT/Model.mtl").to_str().unwrap();
-    // let mesh3: Mesh = obj_loader::load_with_paths(model_path, material_path);
-
-    // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/TestSmooth/Model.mtl").to_str().unwrap();
-    // let mesh4: Mesh = obj_loader::load_with_paths(model_path, material_path);
-
-    let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
-    let material_path = Path::new("Models/TestGroups/Model.mtl").to_str().unwrap();
-    let mesh5: Mesh = obj_loader::load_with_paths(model_path, material_path);
-
-    // let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
-    // let material_path = Path::new("Models/KabutoKatana/Model.mtl").to_str().unwrap();
-    // let mesh6: Mesh = obj_loader::load_with_paths(model_path, material_path);
-
-
-
-
     let light_model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     let light_mesh: Mesh = obj_loader::load_model_old(light_model_path);
 
@@ -129,32 +81,6 @@ fn main() {
     let plane = RenderObject::from_mesh(plane_mesh);
     render_objects.push(plane);
 
-    // let mut rend_obj = RenderObject::from_mesh(mesh1);
-    // rend_obj.set_position(vec3(0.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    // let mut rend_obj = RenderObject::from_mesh(mesh2);
-    // rend_obj.set_position(vec3(5.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    // let mut rend_obj = RenderObject::from_mesh(mesh3);
-    // rend_obj.set_position(vec3(-5.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    // let mut rend_obj = RenderObject::from_mesh(mesh4);
-    // rend_obj.set_position(vec3(10.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    let mut rend_obj = RenderObject::from_mesh(mesh5);
-    rend_obj.set_position(vec3(2.0, 1.0, 0.0));
-    render_objects.push(rend_obj);
-
-    // let mut rend_obj = RenderObject::from_mesh(mesh6);
-    // rend_obj.set_position(vec3(0.0, 1.0, 10.0));
-    // render_objects.push(rend_obj);
-
-
-
     // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     // let mut rend_obj = obj_loader::load_model(model_path);
     // rend_obj.set_position(vec3(0.0, 1.0, 0.0));
@@ -175,31 +101,29 @@ fn main() {
     // rend_obj.set_position(vec3(10.0, 1.0, 0.0));
     // render_objects.push(rend_obj);
 
-    let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(-2.0, 1.0, 0.0));
-    render_objects.push(rend_obj);
+    // let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(-10.0, 1.0, 0.0));
+    // render_objects.push(rend_obj);
 
     // let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
     // let mut rend_obj = obj_loader::load_model(model_path);
     // rend_obj.set_position(vec3(0.0, 1.0, 10.0));
     // render_objects.push(rend_obj);
 
-    // let mut rend_obj = RenderObject::from_mesh(mesh.clone());
-    // rend_obj.set_position(vec3(0.0, 0.5, 0.0));
-    // rend_obj.set_rotation(vec3(-36.0, 0.0, 0.0));
-    // render_objects.push(rend_obj);
-    
-    // for i in 1..40 {
-    //     let mut new_object = RenderObject::from_mesh(mesh.clone());
-    //     new_object.set_position(generate_vector());
-    //     new_object.set_scale((generate_float() / 100.0) + 0.5);
-    //     render_objects.push(new_object);
-    // }
+    let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(-1.0, 0.0, 0.0));
+    render_objects.push(rend_obj);
+
+    let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model_shredded(model_path);
+    rend_obj.set_position(vec3(1.0, 0.0, 0.0));
+    render_objects.push(rend_obj);
     // ---------------------------------------------------
 
 
-    // ----- Рандомные светильники ------
+    // ----- Светильники ------
     let mut light_objects: Vec<Light> = vec![];
 
     // let mut new_object = Light::new();
@@ -218,45 +142,6 @@ fn main() {
     new_object.set_specular(vec3(1.0, 1.0, 1.0));
     new_object.set_light_type(LightType::Directional);
     light_objects.push(new_object);
-
-    // // Статичные светильники
-    // for i in 1..15 {
-    //     let mut new_object = Light::new();
-    //     new_object.set_position(generate_vector());
-    //     new_object.set_scale(0.2);
-
-    //     new_object.set_ambient(generate_normal_vector());
-    //     new_object.set_diffuse(generate_normal_vector());
-    //     new_object.set_specular(generate_normal_vector());
-
-    //     new_object.set_constant(1.0);
-    //     new_object.set_linear(0.022);
-    //     new_object.set_quadratic(0.0019);
-        
-    //     new_object.set_light_type(LightType::Point);
-    //     new_object.set_mesh(light_mesh.clone());
-    //     light_objects.push(new_object);
-    // }
-
-    // // Динамические светильники
-    // for i in 1..15 {
-    //     let mut new_object = Light::new();
-    //     new_object.set_position(generate_vector());
-    //     new_object.set_scale(0.2);
-    //     new_object.set_radius(generate_float() / 2.0);
-
-    //     new_object.set_ambient(generate_normal_vector());
-    //     new_object.set_diffuse(generate_normal_vector());
-    //     new_object.set_specular(generate_normal_vector());
-
-    //     new_object.set_constant(1.0);
-    //     new_object.set_linear(0.022);
-    //     new_object.set_quadratic(0.0019);
-        
-    //     new_object.set_light_type(LightType::Point);
-    //     new_object.set_mesh(light_mesh.clone());
-    //     light_objects.push(new_object);
-    // }
     // ---------------------------------------------------
 
     let now = time::Instant::now();
@@ -281,6 +166,11 @@ fn main() {
     let mut right = false;
     let mut up = false;
     let mut down = false;
+    let mut camera_up = false;
+    let mut camera_down = false;
+    let mut camera_left = false;
+    let mut camera_right = false;
+    let mut camera_speed = 1.0;
 
     let mut yaw = 0.0f32;
     let mut pitch = 0.0f32;
@@ -359,6 +249,15 @@ fn main() {
                                 current_speed_step = normal_speed_step; 
                                 current_max_speed = max_normal_speed;
                             },
+                        event::KeyboardInput { scancode: 72, state: event::ElementState::Released, ..} =>
+                            camera_up = false,
+                        event::KeyboardInput { scancode: 80, state: event::ElementState::Released, ..} =>
+                            camera_down = false,
+                        event::KeyboardInput { scancode: 75, state: event::ElementState::Released, ..} =>
+                            camera_left = false,
+                        event::KeyboardInput { scancode: 77, state: event::ElementState::Released, ..} =>
+                            camera_right = false,
+
 
                         event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
                             forward = true,
@@ -377,6 +276,18 @@ fn main() {
                                 current_speed_step = fast_speed_step;
                                 current_max_speed = max_fast_speed;
                             },
+                        event::KeyboardInput { scancode: 72, state: event::ElementState::Pressed, ..} =>
+                            camera_up = true,
+                        event::KeyboardInput { scancode: 80, state: event::ElementState::Pressed, ..} =>
+                            camera_down = true,
+                        event::KeyboardInput { scancode: 75, state: event::ElementState::Pressed, ..} =>
+                            camera_left = true,
+                        event::KeyboardInput { scancode: 77, state: event::ElementState::Pressed, ..} =>
+                            camera_right = true,
+                        event::KeyboardInput { scancode: 78, state: event::ElementState::Pressed, ..} =>
+                            camera_speed += 0.1,
+                        event::KeyboardInput { scancode: 74, state: event::ElementState::Pressed, ..} =>
+                            { camera_speed -= 0.1; if camera_speed < 0.0 { camera_speed = 0.0 } },
                         
                         // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                         _ => ()
@@ -413,6 +324,69 @@ fn main() {
                 view_port.set_position((0, 0));
                 view_port.set_size((view_width, view_height));
 
+                // Управление
+                let mut matrix = Matrix4::from_scale(1.0);
+                if forward || back || right || left || up || down {
+                    if speed > current_max_speed { speed -= fast_speed_step * 4.0; }
+                    else { speed += current_speed_step; }
+                }
+                else { speed = 0.0; }
+                if forward {
+                    matrix = Matrix4::from_translation(-camera.direction() * speed * delta_time);
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                }
+                if back {
+                    matrix = Matrix4::from_translation(camera.direction() * speed * delta_time);
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                }
+                if right {
+                    matrix = Matrix4::from_translation(camera.right() * speed * delta_time);
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                }
+                if left {
+                    matrix = Matrix4::from_translation(-camera.right() * speed * delta_time);
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                }
+                if up {
+                    matrix = Matrix4::from_translation(camera.up() * speed * delta_time);
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                }
+                if down {
+                    matrix = Matrix4::from_translation(-camera.up() * speed * delta_time);
+                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
+                }
+                if camera_up { delta_y = -camera_speed as f64; }
+                if camera_down { delta_y = camera_speed as f64; }
+                if camera_left { delta_x = -camera_speed as f64; }
+                if camera_right { delta_x = camera_speed as f64; }
+
+
+                if !is_half_light && is_light_togle {
+                    for i in light_objects.iter_mut() {
+                        if i.power() < 1.1 {
+                            let pos = i.position();
+                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
+                            i.set_power(i.power() + lenght / (2100.0 * 25.0));
+                        }
+                    }
+                }
+                if !is_light_togle {
+                    for i in light_objects.iter_mut() {
+                        if i.power() > 0.0001 && (i.radius() > 11.0 || i.radius() < 10.0) {
+                            let pos = i.position();
+                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
+                            i.set_power(i.power() - lenght / (2100.0 * 8.0));
+                        }
+                    }
+                }
+                if is_half_light {
+                    let mut light = &mut light_objects[0];
+                    if light.power() > 0.0001 {
+                        light.set_power(light.power() - 2100.0 / (2100.0 * 25.0));
+                    }
+                }
+
+
                 let offset_x = delta_x * sensitivity * delta_time as f64;
                 let offset_y = delta_y * sensitivity * delta_time as f64;
                 delta_x = 0.0;
@@ -446,81 +420,18 @@ fn main() {
                 // light_objects[0].set_direction(-camera.direction());
                 // light_objects[0].set_position(camera.position());
 
-                // Вращение по кругу
-                let elapsed_time = now.elapsed();
-                let rotate_value = elapsed_time.as_millis() as f32;
-                for i in light_objects.iter_mut() {
-                    if i.radius() > 10.0 {
-                        let slow_multiple = i.radius() * 20.0;
-                        let camx = (rotate_value / slow_multiple).sin() * i.radius();
-                        let camy = ((rotate_value / slow_multiple) + i.radius()).cos() * i.radius();
-                        let camz = (rotate_value / slow_multiple).cos() * i.radius();
-                        i.set_position(vec3(camx, camy, camz));
-                    }
-                }
-
-                let mut matrix = Matrix4::from_scale(1.0);
-                if forward || back || right || left || up || down {
-                    if speed > current_max_speed { speed -= fast_speed_step * 4.0; }
-                    else { speed += current_speed_step; }
-                }
-                else { speed = 0.0; }
-                if forward {
-                    matrix = Matrix4::from_translation(-camera.direction() * speed * delta_time);
-                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                }
-                if back {
-                    matrix = Matrix4::from_translation(camera.direction() * speed * delta_time);
-                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                }
-                if right {
-                    matrix = Matrix4::from_translation(camera.right() * speed * delta_time);
-                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                }
-                if left {
-                    matrix = Matrix4::from_translation(-camera.right() * speed * delta_time);
-                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                }
-                if up {
-                    matrix = Matrix4::from_translation(camera.up() * speed * delta_time);
-                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                }
-                if down {
-                    matrix = Matrix4::from_translation(-camera.up() * speed * delta_time);
-                    camera.set_position((matrix * camera.position().extend(1.0)).truncate());
-                }
-                if !is_half_light && is_light_togle {
-                    for i in light_objects.iter_mut() {
-                        if i.power() < 1.1 {
-                            let pos = i.position();
-                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                            i.set_power(i.power() + lenght / (2100.0 * 25.0));
-                        }
-                    }
-                }
-                if !is_light_togle {
-                    for i in light_objects.iter_mut() {
-                        if i.power() > 0.0001 && (i.radius() > 11.0 || i.radius() < 10.0) {
-                            let pos = i.position();
-                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                            i.set_power(i.power() - lenght / (2100.0 * 8.0));
-                        }
-                    }
-                }
-                if is_half_light {
-                    let mut light = &mut light_objects[0];
-                    if light.power() > 0.0001 {
-                        light.set_power(light.power() - 2100.0 / (2100.0 * 25.0));
-                    }
-                    
-                    // for i in light_objects.iter_mut() {
-                    //     if i.power() > 0.0001 && i.radius() < 10.0 {
-                    //         let pos = i.position();
-                    //         let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                    //         i.set_power(i.power() - lenght / (2100.0 * 25.0));
-                    //     }
-                    // }
-                }
+                // // Вращение по кругу
+                // let elapsed_time = now.elapsed();
+                // let rotate_value = elapsed_time.as_millis() as f32;
+                // for i in light_objects.iter_mut() {
+                //     if i.radius() > 10.0 {
+                //         let slow_multiple = i.radius() * 20.0;
+                //         let camx = (rotate_value / slow_multiple).sin() * i.radius();
+                //         let camy = ((rotate_value / slow_multiple) + i.radius()).cos() * i.radius();
+                //         let camz = (rotate_value / slow_multiple).cos() * i.radius();
+                //         i.set_position(vec3(camx, camy, camz));
+                //     }
+                // }
 
                 shader_program.use_();
                 if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }

@@ -34,47 +34,6 @@ impl ViewPort {
         shader_program.set_uniform_matrix4("view", &camera.view_matrix());
         shader_program.set_uniform_matrix4("projection", &camera.projection_matrix());
 
-        // for current_object in render_objects {
-        //     shader_program.set_uniform_matrix4("model", &current_object.transform_matrix());
-        //     shader_program.set_uniform_matrix3("normalMatrix", &current_object.normal_matrix(&camera.view_matrix()));
-
-        //     // let ambient = vec3(0.0, 0.0, 0.0);
-        //     shader_program.set_uniform_vector3("material.ambient", &current_object.mesh().material().ambient);
-        //     shader_program.set_uniform_vector3("material.diffuse", &current_object.mesh().material().diffuse);
-        //     shader_program.set_uniform_vector3("material.specular", &current_object.mesh().material().specular);
-        //     shader_program.set_uniform_float("material.shininess", current_object.mesh().material().specular_exponent);
-
-        //     unsafe {
-        //         // match &current_object.mesh().material().diff_tex {
-        //         //     Some(texture) => {
-        //         //         shader_program.set_uniform_int("texture_diffuse", 0);
-        //         //         gl::ActiveTexture(gl::TEXTURE0);
-        //         //         gl::BindTexture(gl::TEXTURE_2D, texture.id);
-        //         //     },
-        //         //     None => {
-        //         //         gl::ActiveTexture(gl::TEXTURE0);
-        //         //         gl::BindTexture(gl::TEXTURE_2D, 0);
-        //         //     }
-        //         // }
-        //         // match &current_object.mesh().material().spec_tex {
-        //         //     Some(texture) => {
-        //         //         shader_program.set_uniform_int("texture_specular", 1);
-        //         //         gl::ActiveTexture(gl::TEXTURE1);
-        //         //         gl::BindTexture(gl::TEXTURE_2D, texture.id);
-        //         //     },
-        //         //     None => {
-        //         //         gl::ActiveTexture(gl::TEXTURE1);
-        //         //         gl::BindTexture(gl::TEXTURE_2D, 0);
-        //         //     }
-        //         // }
-
-        //         gl::BindVertexArray(current_object.mesh().render_data().vao);
-        //         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, current_object.mesh().render_data().ebo);
-        //         gl::DrawElements(gl::TRIANGLES, current_object.mesh().indices_count() as i32,
-        //             gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
-        //     }
-        // }
-
         for current_object in render_objects {
             shader_program.set_uniform_matrix4("model", &current_object.transform_matrix());
             shader_program.set_uniform_matrix3("normalMatrix", &current_object.normal_matrix(&camera.view_matrix()));
@@ -86,6 +45,29 @@ impl ViewPort {
                 shader_program.set_uniform_float("material.shininess", mesh.material().specular_exponent);
 
                 unsafe {
+                    match &mesh.material().diff_tex {
+                        Some(texture) => {
+                            shader_program.set_uniform_int("texture_diffuse", 0);
+                            gl::ActiveTexture(gl::TEXTURE0);
+                            gl::BindTexture(gl::TEXTURE_2D, texture.id);
+                        },
+                        None => {
+                            gl::ActiveTexture(gl::TEXTURE0);
+                            gl::BindTexture(gl::TEXTURE_2D, 0);
+                        }
+                    }
+                    match &mesh.material().spec_tex {
+                        Some(texture) => {
+                            shader_program.set_uniform_int("texture_specular", 1);
+                            gl::ActiveTexture(gl::TEXTURE1);
+                            gl::BindTexture(gl::TEXTURE_2D, texture.id);
+                        },
+                        None => {
+                            gl::ActiveTexture(gl::TEXTURE1);
+                            gl::BindTexture(gl::TEXTURE_2D, 0);
+                        }
+                    }
+
                     gl::BindVertexArray(mesh.render_data().vao);
                     gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
                     gl::DrawElements(gl::TRIANGLES, mesh.indices_count() as i32,
