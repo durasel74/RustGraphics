@@ -16,8 +16,8 @@ impl Material {
     pub fn new() -> Self {
         Material {
             ambient: vec3(0.0, 0.0, 0.0),
-            diffuse: vec3(0.5, 0.5, 0.5),
-            specular: vec3(0.5, 0.5, 0.5),
+            diffuse: vec3(0.8, 0.8, 0.8),
+            specular: vec3(0.8, 0.8, 0.8),
             specular_exponent: 0.0,
             diff_tex: None,
             spec_tex: None,
@@ -29,11 +29,11 @@ impl Material {
         if let Some(value) = &material.ambient {
             ambient = Self::mtl_color_to_vector(&value);
         }
-        let mut diffuse = vec3(0.5, 0.5, 0.5);
+        let mut diffuse = vec3(0.8, 0.8, 0.8);
         if let Some(value) = &material.diffuse {
             diffuse = Self::mtl_color_to_vector(&value);
         }
-        let mut specular = vec3(0.5, 0.5, 0.5);
+        let mut specular = vec3(0.8, 0.8, 0.8);
         if let Some(value) = &material.specular {
             specular = Self::mtl_color_to_vector(&value);
         }

@@ -1,9 +1,9 @@
 # Blender MTL File: 'None'
-# Material Count: 12
+# Material Count: 8
 
 newmtl Acero
 Ns 179.999996
-Ka 15.000000 15.000000 15.000000
+Ka 0.400000 0.400000 0.400000
 Kd 1.000000 1.000000 1.000000
 Ks 2.000000 2.000000 2.000000
 Ke 0.0 0.0 0.0
@@ -11,16 +11,6 @@ Ni 1.450000
 d 1.000000
 illum 3
 map_Kd Texturas_Hoja.jpg
-
-newmtl Madera
-Ns 179.999996
-Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 2.000000 2.000000 2.000000
-Ke 0.0 0.0 0.0
-Ni 1.450000
-d 1.000000
-illum 3
 
 newmtl Marmol
 Ns 56.806129
@@ -65,17 +55,6 @@ d 1.000000
 illum 3
 map_Kd Texturas_visor.jpg
 
-newmtl blinn3
-Ns 56.806129
-Ka 0.700000 0.700000 0.700000
-Kd 1.000000 1.000000 1.000000
-Ks 2.000000 2.000000 2.000000
-Ke 0.0 0.0 0.0
-Ni 1.450000
-d 1.000000
-illum 3
-map_Kd Texturas_visor.jpg
-
 newmtl blinn5
 Ns 56.806129
 Ka 0.603896 0.603896 0.603896
@@ -98,16 +77,6 @@ d 1.000000
 illum 3
 map_Kd Texturas_hastas.jpg
 
-newmtl lambert1
-Ns 179.999996
-Ka 1.000000 1.000000 1.000000
-Kd 0.500000 0.500000 0.500000
-Ks 2.000000 2.000000 2.000000
-Ke 0.0 0.0 0.0
-Ni 1.450000
-d 1.000000
-illum 3
-
 newmtl lambert3
 Ns 179.999996
 Ka 1.000000 1.000000 1.000000
@@ -118,14 +87,3 @@ Ni 1.450000
 d 1.000000
 illum 3
 map_Kd Texturas_tejidos.jpg
-
-newmtl phongE1
-Ns 179.999996
-Ka 15.000000 15.000000 15.000000
-Kd 1.000000 1.000000 1.000000
-Ks 2.000000 2.000000 2.000000
-Ke 0.0 0.0 0.0
-Ni 1.450000
-d 1.000000
-illum 3
-map_Kd Texturas_mascara.jpg

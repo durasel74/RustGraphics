@@ -95,6 +95,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     vec3 diff_tex = vec3(texture(texture_diffuse, TexCoords));
     vec3 spec_tex = vec3(texture(texture_specular, TexCoords));
     if (diff_tex == vec3(0.0f, 0.0f, 0.0f)) diff_tex = vec3(1.0f, 1.0f, 1.0f);
+    if (spec_tex == vec3(0.0f, 0.0f, 0.0f)) spec_tex = vec3(1.0f, 1.0f, 1.0f);
 
     vec3 ambient = light.ambient * material.ambient * diff_tex;
     vec3 diffuse = light.diffuse * diff * material.diffuse * diff_tex;
@@ -118,6 +119,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     vec3 diff_tex = vec3(texture(texture_diffuse, TexCoords));
     vec3 spec_tex = vec3(texture(texture_specular, TexCoords));
     if (diff_tex == vec3(0.0f, 0.0f, 0.0f)) diff_tex = vec3(1.0f, 1.0f, 1.0f);
+    if (spec_tex == vec3(0.0f, 0.0f, 0.0f)) spec_tex = vec3(1.0f, 1.0f, 1.0f);
     
     vec3 ambient = light.ambient * material.ambient * diff_tex;
     vec3 diffuse = light.diffuse * diff * material.diffuse * diff_tex;
@@ -145,6 +147,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     vec3 diff_tex = vec3(texture(texture_diffuse, TexCoords));
     vec3 spec_tex = vec3(texture(texture_specular, TexCoords));
     if (diff_tex == vec3(0.0f, 0.0f, 0.0f)) diff_tex = vec3(1.0f, 1.0f, 1.0f);
+    if (spec_tex == vec3(0.0f, 0.0f, 0.0f)) spec_tex = vec3(1.0f, 1.0f, 1.0f);
 
     vec3 ambient = light.ambient * material.ambient * diff_tex;
     vec3 diffuse = light.diffuse * diff * material.diffuse * diff_tex;

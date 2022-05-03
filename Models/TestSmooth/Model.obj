@@ -1,6 +1,6 @@
 # Blender v2.80 (sub 75) OBJ File: ''
 # www.blender.org
-mtllib TestSmooth.mtl
+mtllib Model.mtl
 o Suzanne
 v 0.438531 0.159974 0.755247
 v -0.438531 0.159974 0.755247

@@ -60,60 +60,40 @@ fn main() {
         Err(err) => { println!("{}", err); return }
     };
 
-    // Загрузка моделей
-    let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
-    let plane_material_path = Path::new("Models/Plane/Model.mtl").to_str().unwrap();
-    let plane_mesh: Mesh = obj_loader::load_with_paths(plane_model_path, plane_material_path);
-
+    // ----- Модели ------
     let light_model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
     let light_mesh: Mesh = obj_loader::load_model_old(light_model_path);
 
-
-    let mut view_port = ViewPort::new();
-
-    let mut camera = Camera::new();
-    camera.set_is_look_at(false);
-    camera.set_is_ortho(false);
-    camera.set_position(vec3(2.0, 1.0, 0.0));
-
-    // ----- Рандомные модели ------
     let mut render_objects: Vec<RenderObject> = vec![];
-    let plane = RenderObject::from_mesh(plane_mesh);
+
+    let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
+    let plane = obj_loader::load_model(plane_model_path);
     render_objects.push(plane);
-
-    // let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
-    // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(0.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    // let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
-    // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(5.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    // let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
-    // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(10.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    // let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
-    // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(-10.0, 1.0, 0.0));
-    // render_objects.push(rend_obj);
-
-    // let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
-    // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(0.0, 1.0, 10.0));
-    // render_objects.push(rend_obj);
+    
 
     let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
     let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(-1.0, 0.0, 0.0));
+    rend_obj.set_position(vec3(0.0, 0.3, 0.0));
     render_objects.push(rend_obj);
 
-    let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model_shredded(model_path);
-    rend_obj.set_position(vec3(1.0, 0.0, 0.0));
+    let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(-5.0, 1.0, 0.0));
+    render_objects.push(rend_obj);
+
+    let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(5.0, 1.0, 0.0));
+    render_objects.push(rend_obj);
+
+    let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(10.0, 1.0, 0.0));
+    render_objects.push(rend_obj);
+
+    let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(-10.0, 1.0, 0.0));
     render_objects.push(rend_obj);
     // ---------------------------------------------------
 
@@ -138,6 +118,12 @@ fn main() {
     new_object.set_light_type(LightType::Directional);
     light_objects.push(new_object);
     // ---------------------------------------------------
+
+    let mut view_port = ViewPort::new();
+    let mut camera = Camera::new();
+    camera.set_is_look_at(false);
+    camera.set_is_ortho(false);
+    camera.set_position(vec3(2.0, 1.0, 0.0));
 
     let now = time::Instant::now();
     let mut old_since_time = now.elapsed().as_secs_f32();
@@ -176,7 +162,7 @@ fn main() {
     let mut is_light_togle = true;
     let mut is_half_light = false;
 
-    // Первоначальная настройка пайплайна
+    // Первоначальная настройка рендера
     unsafe { 
         gl::ClearColor(0.2, 0.2, 0.2, 1.0);
         gl::PointSize(3.0);
