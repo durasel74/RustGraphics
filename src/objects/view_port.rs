@@ -88,16 +88,13 @@ impl ViewPort {
             light_shader_program.set_uniform_matrix4("model", &current_light.transform_matrix());
             light_shader_program.set_uniform_vector3("lightColor", &current_light.specular());
 
-            match current_light.mesh() {
-                Some(mesh) => {
-                    unsafe {
-                        gl::BindVertexArray(mesh.render_data().vao);
-                        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
-                        gl::DrawElements(gl::TRIANGLES, mesh.indices_count() as i32,
-                            gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
-                    }
-                },
-                _ => (),
+            for mesh in current_light.meshes() {
+                unsafe {
+                    gl::BindVertexArray(mesh.render_data().vao);
+                    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, mesh.render_data().ebo);
+                    gl::DrawElements(gl::TRIANGLES, mesh.indices_count() as i32,
+                        gl::UNSIGNED_INT, 0 as *const gl::types::GLvoid);
+                }
             }
         }
     }

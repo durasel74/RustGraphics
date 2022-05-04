@@ -1,4 +1,4 @@
-use cgmath::{ Matrix, SquareMatrix, Matrix3, Matrix4, Vector3, vec3, Rad };
+use cgmath::{ Matrix4, Vector3, vec3, Rad };
 use super::{ Mesh, ShaderProgram };
 
 pub enum LightType {
@@ -25,9 +25,8 @@ pub struct Light {
     cut_off: f32,
     outer_cut_off: f32,
 
-    mesh: Option<Mesh>,
+    meshes: Vec<Mesh>,
     light_type: LightType,
-
 
     radius: f32,
 }
@@ -51,7 +50,7 @@ impl Light {
             cut_off: 0.0,
             outer_cut_off: 0.0,
 
-            mesh: None,
+            meshes: vec![],
             light_type: LightType::Directional,
 
 
@@ -89,8 +88,8 @@ impl Light {
     pub fn outer_cut_off(&self) -> f32 { self.outer_cut_off }
     pub fn set_outer_cut_off(&mut self, value: f32) { self.outer_cut_off = value; }
 
-    pub fn mesh(&self) -> &Option<Mesh> { &self.mesh }
-    pub fn set_mesh(&mut self, value: Mesh) { self.mesh = Some(value); }
+    pub fn meshes(&self) -> &Vec<Mesh> { &self.meshes }
+    pub fn set_meshes(&mut self, value: Vec<Mesh>) { self.meshes = value; }
     pub fn light_type(&self) -> &LightType { &self.light_type }
     pub fn set_light_type(&mut self, value: LightType) { self.light_type = value; }
 

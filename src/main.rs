@@ -8,7 +8,7 @@ use rand::Rng;
 
 use cgmath::prelude::InnerSpace;
 use cgmath::{ Matrix4, Vector3, vec3 };
-use objects::{ Mesh, RenderObject, Camera, ViewPort, Light, LightType, obj_loader };
+use objects::{ RenderObject, Camera, ViewPort, Light, LightType, obj_loader };
 
 use glutin;
 use glutin::window;
@@ -61,9 +61,6 @@ fn main() {
     };
 
     // ----- Модели ------
-    let light_model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
-    let light_mesh: Mesh = obj_loader::load_model_old(light_model_path);
-
     let mut render_objects: Vec<RenderObject> = vec![];
 
     let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
@@ -84,6 +81,7 @@ fn main() {
     let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
     let mut rend_obj = obj_loader::load_model(model_path);
     rend_obj.set_position(vec3(5.0, 1.0, 0.0));
+    let light_meshes = rend_obj.meshes().clone();
     render_objects.push(rend_obj);
 
     let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
@@ -116,6 +114,18 @@ fn main() {
     new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
     new_object.set_specular(vec3(1.0, 1.0, 1.0));
     new_object.set_light_type(LightType::Directional);
+    light_objects.push(new_object);
+
+    let mut new_object = Light::new();
+    new_object.set_position(vec3(0.0, 1.0, -5.0));
+    new_object.set_ambient(vec3(0.2, 0.2, 0.2));
+    new_object.set_diffuse(vec3(0.2, 0.2, 1.0));
+    new_object.set_specular(vec3(0.2, 0.2, 1.0));
+    new_object.set_constant(1.0);
+    new_object.set_linear(0.022);
+    new_object.set_quadratic(0.0019);
+    new_object.set_light_type(LightType::Point);
+    new_object.set_meshes(light_meshes);
     light_objects.push(new_object);
     // ---------------------------------------------------
 

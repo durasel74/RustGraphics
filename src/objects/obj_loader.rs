@@ -1,10 +1,10 @@
-use std::collections::hash_map::HashMap;
 use std::io::{ Seek, BufReader };
 use std::fs::File;
 use std::path::Path;
 use cgmath::{ Vector2, Vector3 };
 use obj::{ TexturedVertex, Obj, load_obj };
-use obj::raw::{ self, RawObj, material };
+use obj::raw::{ self, RawObj, RawMtl, material };
+use obj::raw::object::{ Range };
 use super::{ Vertex, RenderObject, Material, Mesh };
 
 pub fn load_model(model_path: &str) -> RenderObject {
@@ -13,31 +13,28 @@ pub fn load_model(model_path: &str) -> RenderObject {
     file_buf.rewind().unwrap();
     let obj_model: Obj<TexturedVertex, u32> = load_obj(&mut file_buf).unwrap();
 
-
     let ranges = get_ranges(&obj_data);
     let material_ranges = get_material_ranges(&obj_data, &ranges);
-
-
-    let folder_path = Path::new(model_path).parent().unwrap().to_str().unwrap();
-    let mtl_path = format!("{}/{}", folder_path, &obj_data.material_libraries[0]);
+    let mtl_data = load_mtl(&obj_data, model_path);
     
-    let meshes = create_meshes(material_ranges, obj_model, mtl_path);  
+    let meshes = create_meshes(&obj_model, &material_ranges, &mtl_data, model_path);  
     RenderObject::from_meshes(meshes)
 }
 
-fn get_ranges(obj_data: &RawObj) -> Vec<(usize, usize)> {
-    let mut ranges: Vec<(usize, usize)> = vec![];
+fn get_ranges(obj_data: &RawObj) -> Vec<Range> {
+    let mut ranges: Vec<Range> = vec![];
     for group in obj_data.groups.iter() {
         // let mesh_name = mesh.0;
         let polygons = group.1.polygons[0];
-        ranges.push((polygons.start * 3, polygons.end * 3));
+        ranges.push(Range { start: polygons.start * 3, end: polygons.end * 3 });
     }
     ranges
 }
 
-fn get_material_ranges(obj_data: &RawObj, mesh_ranges: &Vec<(usize, usize)>) 
--> HashMap<(usize, usize), String> {
-    let mut material_ranges: HashMap<(usize, usize), String> = HashMap::new();
+fn get_material_ranges(obj_data: &RawObj, mesh_ranges: &Vec<Range>) 
+-> Vec<(Range, String)> {
+    let mut material_ranges: Vec<(Range, String)> = Vec::with_capacity(mesh_ranges.len());
+
     for range in mesh_ranges {
         let mut material_name = "".to_string();
         'outer: for material in obj_data.meshes.iter() {
@@ -45,48 +42,59 @@ fn get_material_ranges(obj_data: &RawObj, mesh_ranges: &Vec<(usize, usize)>)
                 let material_start = polygons.start * 3;
                 let material_end = polygons.end * 3;
 
-                if (material_start >= range.0 && material_end <= range.1)
-                || (range.0 >= material_start && range.1 <= material_end) {
+                if (material_start >= range.start && material_end <= range.end)
+                || (range.start >= material_start && range.end <= material_end) {
                     material_name = material.0.clone();
                     break 'outer;
                 }
             }
         }
-        material_ranges.entry(range.to_owned()).or_insert(material_name);
+        material_ranges.push((range.to_owned(), material_name));
     }
     material_ranges
 }
 
-fn create_meshes(material_ranges: HashMap<(usize, usize), String>, 
-obj_model: Obj<TexturedVertex, u32>, mtl_path: String) -> Vec<Mesh> {
+fn load_mtl(obj_data: &RawObj, obj_path: &str) -> RawMtl {
+    let folder_path = Path::new(obj_path).parent().unwrap().to_str().unwrap();
+    let mtl_path = format!("{}/{}", folder_path, &obj_data.material_libraries[0]);
     let input = BufReader::new(File::open(&mtl_path).unwrap());
-    let mtl = material::parse_mtl(input).unwrap();
+    material::parse_mtl(input).unwrap()
+}
 
+fn create_meshes(obj_model: &Obj<TexturedVertex, u32>, ranges: &Vec<(Range, String)>, 
+mtl_data: &RawMtl, obj_path: &str) -> Vec<Mesh> {
     let mut meshes: Vec<Mesh> = vec![];
-    for i in material_ranges {
-        let material_name = i.1;
+    for i in ranges {
+        let material_name = i.1.clone();
         let range = i.0;
-
-        let range_indices = &obj_model.indices[range.0..range.1];
-        let min_index = *range_indices.iter().min().unwrap() as usize;
-        let max_index = *range_indices.iter().max().unwrap() as usize;
-
-        let vertices: Vec<TexturedVertex> = obj_model.vertices[min_index..=max_index].to_vec();
-        let mut indices: Vec<u32> = vec![];
-        for j in range_indices { indices.push(*j - min_index as u32); }
-        let vertices = obj_vertex_to_vertex(vertices);
-
-        let mut new_mesh = Mesh::from_vertices(vertices, indices);
-
-        let mtl_material = mtl.materials.get(&material_name);
-        if let Some(material) = mtl_material {
-            let folder_path = Path::new(&mtl_path).parent().unwrap().to_str().unwrap();
-            let material = Material::from_mtl(material, &folder_path);
-            new_mesh.set_material(material);
-        }
+        let mut new_mesh = select_mesh(obj_model, range);
+        attach_material(&mut new_mesh, mtl_data, &material_name, obj_path);
         meshes.push(new_mesh);
     }
     meshes
+}
+
+fn select_mesh(obj_model: &Obj<TexturedVertex, u32>, range: Range) -> Mesh {
+    let range_indices = &obj_model.indices[range.start..range.end];
+    let min_index = *range_indices.iter().min().unwrap() as usize;
+    let max_index = *range_indices.iter().max().unwrap() as usize;
+    let vertices: Vec<TexturedVertex> = obj_model.vertices[min_index..=max_index].to_vec();
+    let vertices = obj_vertex_to_vertex(vertices);
+
+    let mut indices: Vec<u32> = vec![];
+    for j in range_indices { 
+        indices.push(*j - min_index as u32); 
+    }
+    Mesh::from_vertices(vertices, indices)
+}
+
+fn attach_material(mesh: &mut Mesh, mtl_data: &RawMtl, material_name: &str, obj_path: &str) {
+    let mtl_material = mtl_data.materials.get(material_name);
+    if let Some(material) = mtl_material {
+        let folder_path = Path::new(obj_path).parent().unwrap().to_str().unwrap();
+        let material = Material::from_mtl(material, &folder_path);
+        mesh.set_material(material);
+    }
 }
 
 fn obj_vertex_to_vertex(obj_vertices: Vec<TexturedVertex>) -> Vec<Vertex> {
@@ -100,26 +108,3 @@ fn obj_vertex_to_vertex(obj_vertices: Vec<TexturedVertex>) -> Vec<Vertex> {
     }
     vertices
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-pub fn load_with_paths(model_path: &str, material_path: &str) -> Mesh {
-    let mut mesh = load_model_old(model_path);
-    let material = load_material_old(material_path);
-    mesh.set_material(material);
-    return mesh
-}
-pub fn load_model_old(model_path: &str) -> Mesh {
-    let input = BufReader::new(File::open(model_path).unwrap());
-    let obj_model: Obj<TexturedVertex, u32> = load_obj(input).unwrap();
-    Mesh::from_obj(&obj_model)
-}
-pub fn load_material_old(material_path: &str) -> Material {
-    let input = BufReader::new(File::open(material_path).unwrap());
-    let mtl = material::parse_mtl(input).unwrap();
-    let mut mat: Option<&material::Material> = None;
-    for i in mtl.materials.values() { mat = Some(i); break; };
-    let folder_path = Path::new(material_path).parent().unwrap().to_str().unwrap();
-    Material::from_mtl(mat.unwrap(), &folder_path)
-}
-////////////////////////////////////////////////////////////////////////////////
