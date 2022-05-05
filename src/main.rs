@@ -63,36 +63,27 @@ fn main() {
     // ----- Модели ------
     let mut render_objects: Vec<RenderObject> = vec![];
 
-    let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
-    let plane = obj_loader::load_model(plane_model_path);
-    render_objects.push(plane);
+    // let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
+    // let plane = obj_loader::load_model(plane_model_path);
+    // render_objects.push(plane);
+    
+    // Машина в горах
+    let model_path = Path::new("Models/Hills/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(0.0, 0.0, 40.0));
+    rend_obj.set_scale(100.0);
+    render_objects.push(rend_obj);
+
+    let model_path = Path::new("Models/AmericanMuscle/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(0.0, 0.35, 0.0));
+    rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
+    render_objects.push(rend_obj);
+
+
     
 
-    let model_path = Path::new("Models/KabutoKatana/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(0.0, 0.3, 0.0));
-    render_objects.push(rend_obj);
 
-    let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(-5.0, 1.0, 0.0));
-    render_objects.push(rend_obj);
-
-    let model_path = Path::new("Models/Sphere/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(5.0, 1.0, 0.0));
-    let light_meshes = rend_obj.meshes().clone();
-    render_objects.push(rend_obj);
-
-    let model_path = Path::new("Models/TestSmooth/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(10.0, 1.0, 0.0));
-    render_objects.push(rend_obj);
-
-    let model_path = Path::new("Models/TestGroups/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(-10.0, 1.0, 0.0));
-    render_objects.push(rend_obj);
     // ---------------------------------------------------
 
 
@@ -116,17 +107,17 @@ fn main() {
     new_object.set_light_type(LightType::Directional);
     light_objects.push(new_object);
 
-    let mut new_object = Light::new();
-    new_object.set_position(vec3(0.0, 1.0, -5.0));
-    new_object.set_ambient(vec3(0.2, 0.2, 0.2));
-    new_object.set_diffuse(vec3(0.2, 0.2, 1.0));
-    new_object.set_specular(vec3(0.2, 0.2, 1.0));
-    new_object.set_constant(1.0);
-    new_object.set_linear(0.022);
-    new_object.set_quadratic(0.0019);
-    new_object.set_light_type(LightType::Point);
-    new_object.set_meshes(light_meshes);
-    light_objects.push(new_object);
+    // let mut new_object = Light::new();
+    // new_object.set_position(vec3(0.0, 1.0, -5.0));
+    // new_object.set_ambient(vec3(0.2, 0.2, 0.2));
+    // new_object.set_diffuse(vec3(0.2, 0.2, 1.0));
+    // new_object.set_specular(vec3(0.2, 0.2, 1.0));
+    // new_object.set_constant(1.0);
+    // new_object.set_linear(0.022);
+    // new_object.set_quadratic(0.0019);
+    // new_object.set_light_type(LightType::Point);
+    // new_object.set_meshes(light_meshes);
+    // light_objects.push(new_object);
     // ---------------------------------------------------
 
     let mut view_port = ViewPort::new();
