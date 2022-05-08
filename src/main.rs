@@ -80,9 +80,18 @@ fn main() {
     rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
     render_objects.push(rend_obj);
 
+    // // Оружие под фонарем
+    // let model_path = Path::new("Models/PliteFlor/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, -1.0, 0.0));
+    // rend_obj.set_scale(0.2);
+    // render_objects.push(rend_obj);
 
+    // let model_path = Path::new("Models/SteampunkPistol/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 0.0, 0.0));
+    // render_objects.push(rend_obj);
     
-
 
     // ---------------------------------------------------
 
@@ -91,6 +100,17 @@ fn main() {
     let mut light_objects: Vec<Light> = vec![];
 
     // let mut new_object = Light::new();
+    // new_object.set_ambient(vec3(0.0, 0.0, 0.0));
+    // new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
+    // new_object.set_specular(vec3(1.0, 1.0, 1.0));
+    // new_object.set_cut_off(15.0);
+    // new_object.set_outer_cut_off(25.0);
+    // new_object.set_light_type(LightType::Spotlight);
+    // light_objects.push(new_object);
+
+    // let mut new_object = Light::new();
+    // new_object.set_position(vec3(0.0, 10.0, 0.0));
+    // new_object.set_direction(vec3(0.0, -1.0, 0.0));
     // new_object.set_ambient(vec3(0.0, 0.0, 0.0));
     // new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
     // new_object.set_specular(vec3(1.0, 1.0, 1.0));
@@ -135,12 +155,12 @@ fn main() {
     let sensitivity = 3.0;
     let mut is_look_at = false;
 
-    let normal_speed_step = 0.02;
-    let fast_speed_step = 0.07;
-    let mut current_speed_step = normal_speed_step;
-    let max_normal_speed = 0.6;
-    let max_fast_speed = 10.0;
+    let mut max_normal_speed = 0.60;
+    let mut max_fast_speed = max_normal_speed * 5.00;
     let mut current_max_speed = max_normal_speed;
+    let mut normal_speed_step = max_normal_speed / 100.0;
+    let mut fast_speed_step = max_fast_speed / 100.0;
+    let mut current_speed_step = normal_speed_step;
     let mut speed = 0.0;
     
     let mut forward = false;
@@ -149,10 +169,13 @@ fn main() {
     let mut right = false;
     let mut up = false;
     let mut down = false;
+
     let mut camera_up = false;
     let mut camera_down = false;
     let mut camera_left = false;
     let mut camera_right = false;
+    let mut camera_closer = false;
+    let mut camera_father = false;
     let mut camera_speed = 1.0;
 
     let mut yaw = 0.0f32;
@@ -165,7 +188,7 @@ fn main() {
 
     // Первоначальная настройка рендера
     unsafe { 
-        gl::ClearColor(0.2, 0.2, 0.2, 1.0);
+        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
@@ -253,7 +276,12 @@ fn main() {
                                 camera_left = false,
                             event::KeyboardInput { scancode: 77, state: event::ElementState::Released, ..} =>
                                 camera_right = false,
-
+                            event::KeyboardInput { scancode: 83, state: event::ElementState::Released, ..} =>
+                                camera_father = false,
+                            event::KeyboardInput { scancode: 82, state: event::ElementState::Released, ..} =>
+                                camera_closer = false,
+                            event::KeyboardInput { scancode: 46, state: event::ElementState::Released, ..} =>
+                                camera.set_target(camera.position()),
 
                             event::KeyboardInput { scancode: 17, state: event::ElementState::Pressed, ..} =>
                                 forward = true,
@@ -267,6 +295,25 @@ fn main() {
                                 down = true,
                             event::KeyboardInput { scancode: 57, state: event::ElementState::Pressed, ..} =>
                                 up = true,
+                            event::KeyboardInput { scancode: 13, state: event::ElementState::Pressed, ..} =>
+                                {
+                                    max_normal_speed += 0.05;
+                                    max_fast_speed = max_normal_speed * 5.0;
+                                    current_max_speed = max_normal_speed;
+                                    normal_speed_step = max_normal_speed / 100.0;
+                                    fast_speed_step = max_fast_speed / 100.0;
+                                    current_speed_step = normal_speed_step;
+                                }
+                            event::KeyboardInput { scancode: 12, state: event::ElementState::Pressed, ..} =>
+                                {
+                                    max_normal_speed -= 0.05;
+                                    if max_normal_speed < 0.05 { max_normal_speed = 0.0 }
+                                    max_fast_speed = max_normal_speed * 5.0;
+                                    current_max_speed = max_normal_speed;
+                                    normal_speed_step = max_normal_speed / 100.0;
+                                    fast_speed_step = max_fast_speed / 100.0;
+                                    current_speed_step = normal_speed_step;
+                                },
                             event::KeyboardInput { scancode: 42, state: event::ElementState::Pressed, ..} =>
                                 {
                                     current_speed_step = fast_speed_step;
@@ -280,11 +327,19 @@ fn main() {
                                 camera_left = true,
                             event::KeyboardInput { scancode: 77, state: event::ElementState::Pressed, ..} =>
                                 camera_right = true,
+                            event::KeyboardInput { scancode: 83, state: event::ElementState::Pressed, ..} =>
+                                camera_father = true,
+                            event::KeyboardInput { scancode: 82, state: event::ElementState::Pressed, ..} =>
+                                camera_closer = true,
                             event::KeyboardInput { scancode: 78, state: event::ElementState::Pressed, ..} =>
                                 camera_speed += 0.1,
                             event::KeyboardInput { scancode: 74, state: event::ElementState::Pressed, ..} =>
                                 { camera_speed -= 0.1; if camera_speed < 0.0 { camera_speed = 0.0 } },
-                            
+                            event::KeyboardInput { scancode: 55, state: event::ElementState::Pressed, ..} =>
+                                camera.set_field_of_view(camera.field_of_view() + 0.5),
+                            event::KeyboardInput { scancode: 57397, state: event::ElementState::Pressed, ..} =>
+                                if camera.field_of_view() > 0.5 { camera.set_field_of_view(camera.field_of_view() - 0.5) },
+
                             // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                             _ => ()
                         },
@@ -356,6 +411,14 @@ fn main() {
                 if camera_down { delta_y = camera_speed as f64; }
                 if camera_left { delta_x = -camera_speed as f64; }
                 if camera_right { delta_x = camera_speed as f64; }
+                if camera_father {
+                    let c_speed = 0.2 * camera_speed * delta_time;
+                    camera.set_ortho_factor(camera.ortho_factor() + c_speed); 
+                }
+                if camera_closer {
+                    let c_speed = 0.2 * camera_speed * delta_time;
+                    camera.set_ortho_factor(camera.ortho_factor() - c_speed); 
+                }
 
 
                 if !is_half_light && is_light_togle {
@@ -407,9 +470,9 @@ fn main() {
                 else {
                     let factor = camera.ortho_factor();
                     camera.set_position(vec3(
-                        direct_x * factor,
-                        direct_y * factor,
-                        direct_z * factor
+                        (direct_x * factor) + camera.target().x,
+                        (direct_y * factor) + camera.target().y,
+                        (direct_z * factor) + camera.target().z
                     ));
                 }
 
@@ -449,6 +512,7 @@ fn to_draw_mode(value: u32) -> gl::types::GLenum {
         2 => gl::POINT,
         _ => gl::FILL
     }
+
 }
 
 fn set_cullface_mode(value: u32) {

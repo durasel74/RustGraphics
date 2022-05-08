@@ -45,7 +45,7 @@ out vec4 FragColor;
 
 #define DIR_LIGHT_COUNT 5
 #define POINT_LIGHT_COUNT 30
-#define SPOT_LIGHT_COUNT 1
+#define SPOT_LIGHT_COUNT 2
 
 uniform Material material;
 uniform DirLight dirLights[DIR_LIGHT_COUNT];
