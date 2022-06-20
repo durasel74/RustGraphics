@@ -58,29 +58,41 @@ uniform int spotLightCount;
 uniform sampler2D texture_diffuse;
 uniform sampler2D texture_specular;
 
-uniform int wire_mode;
+uniform int draw_mode;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir);
 
 void main()
 {
-    if (wire_mode == 0)
+    vec3 result = vec3(0.0f, 0.0f, 0.0f);
+    vec3 norm = normalize(Normal);
+    vec3 viewDir = normalize(-FragPos);
+
+    if (draw_mode == 0)
     {
-        vec3 norm = normalize(Normal);
-        vec3 viewDir = normalize(-FragPos);
-        
-        vec3 result = vec3(0.0f, 0.0f, 0.0f);
         for(int i = 0; i < dirLightCount; i++)
             result += CalcDirLight(dirLights[i], norm, viewDir);
         for(int i = 0; i < pointLightCount; i++)
             result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
         for(int i = 0; i < spotLightCount; i++)
             result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
-        FragColor = vec4(result, 1.0);
     }
-    else FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    else if (draw_mode == 1)
+    {
+        DirLight dirLight = DirLight(
+            vec3(0.4f, -0.5f, -0.4f),
+            vec3(0.8f, 0.8f, 0.8f),
+            vec3(1.0f, 1.0f, 1.0f),
+            vec3(0.0f, 0.0f, 0.0f)
+        );
+        result = CalcDirLightTest(dirLight, norm, viewDir);
+    }
+    else result = vec3(1.0f, 1.0f, 1.0f);
+
+    FragColor = vec4(result, 1.0);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
@@ -155,4 +167,15 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     diffuse *= intensity;
     specular *= intensity;
     return (ambient + diffuse + specular);
+}
+
+vec3 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir)
+{
+    vec3 lightDirection = vec3(View * vec4(light.direction, 0.0));
+    vec3 lightDir = normalize(-lightDirection);
+    float diff = max(dot(normal, lightDir), 0.0);
+
+    vec3 ambient = light.ambient * vec3(0.2f, 0.2f, 0.2f);
+    vec3 diffuse = light.diffuse * diff * vec3(1.0f, 1.0f, 1.0f);
+    return (ambient + diffuse);
 }

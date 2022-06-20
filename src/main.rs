@@ -188,7 +188,7 @@ fn main() {
 
     // Первоначальная настройка рендера
     unsafe { 
-        gl::ClearColor(0.0, 0.0, 0.0, 1.0);
+        gl::ClearColor(0.4, 0.6, 0.8, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
@@ -222,7 +222,7 @@ fn main() {
                             event::KeyboardInput { scancode: 1, state: event::ElementState::Released, .. } => 
                                 *control_flow = event_loop::ControlFlow::Exit,
                             event::KeyboardInput { scancode: 15, state: event::ElementState::Released, .. } => 
-                                draw_mode = (draw_mode + 1) % 3,
+                                draw_mode = (draw_mode + 1) % 4,
                             event::KeyboardInput { scancode: 28, state: event::ElementState::Released, .. } => 
                             {
                                 if !is_fullscreen {
@@ -494,8 +494,7 @@ fn main() {
                 // }
 
                 shader_program.use_();
-                if draw_mode == 0 { shader_program.set_uniform_int("wire_mode", 0); }
-                else { shader_program.set_uniform_int("wire_mode", 1); }
+                shader_program.set_uniform_int("draw_mode", draw_mode as i32);
 
                 view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light_objects);
                 windowed_context.swap_buffers().unwrap();
@@ -508,8 +507,9 @@ fn main() {
 fn to_draw_mode(value: u32) -> gl::types::GLenum {
     match value {
         0 => gl::FILL,
-        1 => gl::LINE,
-        2 => gl::POINT,
+        1 => gl::FILL,
+        2 => gl::LINE,
+        3 => gl::POINT,
         _ => gl::FILL
     }
 
@@ -519,8 +519,9 @@ fn set_cullface_mode(value: u32) {
     unsafe {
         match value {
             0 => gl::Enable(gl::CULL_FACE),
-            1 => gl::Disable(gl::CULL_FACE),
+            1 => gl::Enable(gl::CULL_FACE),
             2 => gl::Disable(gl::CULL_FACE),
+            3 => gl::Disable(gl::CULL_FACE),
             _ => gl::Enable(gl::CULL_FACE)
         }
     }
