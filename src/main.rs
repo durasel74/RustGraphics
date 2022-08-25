@@ -68,16 +68,16 @@ fn main() {
     // render_objects.push(plane);
     
     // Машина в горах
-    let model_path = Path::new("Models/Hills/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(0.0, 0.0, 40.0));
-    rend_obj.set_scale(100.0);
-    render_objects.push(rend_obj);
+    // let model_path = Path::new("Models/Hills/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 0.0, 40.0));
+    // rend_obj.set_scale(100.0);
+    // render_objects.push(rend_obj);
 
     let model_path = Path::new("Models/AmericanMuscle/Model.obj").to_str().unwrap();
     let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(0.0, 0.35, 0.0));
-    rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
+    // rend_obj.set_position(vec3(0.0, 0.35, 0.0));
+    // rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
     render_objects.push(rend_obj);
 
     // // Оружие под фонарем
@@ -91,7 +91,26 @@ fn main() {
     // let mut rend_obj = obj_loader::load_model(model_path);
     // rend_obj.set_position(vec3(0.0, 0.0, 0.0));
     // render_objects.push(rend_obj);
-    
+
+    // // Средневековый город
+    // let model_path = Path::new("Models/MeddleCity/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 0.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // // Магический мост
+    // let model_path = Path::new("Models/MagicalBridge/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 0.0, 0.0));
+    // render_objects.push(rend_obj);
+
+    // Модерн город
+    let model_path = Path::new("Models/ModernCityBlock/Model.obj").to_str().unwrap();
+    let mut rend_obj = obj_loader::load_model(model_path);
+    rend_obj.set_position(vec3(0.0, 0.0, 0.0));
+    render_objects.push(rend_obj);
+
+
 
     // ---------------------------------------------------
 
@@ -339,6 +358,9 @@ fn main() {
                                 camera.set_field_of_view(camera.field_of_view() + 0.5),
                             event::KeyboardInput { scancode: 57397, state: event::ElementState::Pressed, ..} =>
                                 if camera.field_of_view() > 0.5 { camera.set_field_of_view(camera.field_of_view() - 0.5) },
+
+                            event::KeyboardInput { scancode: 19, state: event::ElementState::Released, ..} =>
+                                { render_objects[0].set_position(camera.position()); },
 
                             // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                             _ => ()
