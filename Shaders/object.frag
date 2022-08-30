@@ -93,6 +93,7 @@ void main()
     else result = vec3(1.0f, 1.0f, 1.0f);
 
     FragColor = vec4(result, 1.0);
+    // FragColor = vec4(vec3(FragPos.z), 1.0);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)

@@ -68,17 +68,17 @@ fn main() {
     // render_objects.push(plane);
     
     // Машина в горах
-    // let model_path = Path::new("Models/Hills/Model.obj").to_str().unwrap();
-    // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(0.0, 0.0, 40.0));
-    // rend_obj.set_scale(100.0);
-    // render_objects.push(rend_obj);
-
     let model_path = Path::new("Models/AmericanMuscle/Model.obj").to_str().unwrap();
     let mut rend_obj = obj_loader::load_model(model_path);
     // rend_obj.set_position(vec3(0.0, 0.35, 0.0));
     // rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
     render_objects.push(rend_obj);
+    
+    // let model_path = Path::new("Models/Hills/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 0.0, 40.0));
+    // rend_obj.set_scale(100.0);
+    // render_objects.push(rend_obj);
 
     // // Оружие под фонарем
     // let model_path = Path::new("Models/PliteFlor/Model.obj").to_str().unwrap();

@@ -1,0 +1,59 @@
+# Blender MTL File: 'None'
+# Material Count: 5
+
+newmtl Bridge
+Ns 17.195600
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.455631 0.455631 0.455631
+Ke 0.0 0.0 0.0
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd bridge_BC_v2.jpg
+map_Ks bridge_R.jpg
+
+newmtl Magic
+Ns 807.296826
+Ka 1.000000 1.000000 1.000000
+Kd 0.255009 0.696264 0.800000
+Ks 0.895904 0.895904 0.895904
+Ke 0.0 0.0 0.0
+Ni 1.450000
+d 0.163823
+illum 9
+
+newmtl Nature
+Ns 2.854139
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.0 0.0 0.0
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd Nature_BC_v2.jpg
+map_Ks Nature_R.jpg
+
+newmtl Rocks_Terrain
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.522184 0.522184 0.522184
+Ke 0.0 0.0 0.0
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd terri_BC_v2.jpg
+map_Ks terri_R.jpg
+
+newmtl Water
+Ns 209.903758
+Ka 0.378840 0.378840 0.378840
+Kd 0.800000 0.800000 0.800000
+Ks 0.100683 0.100683 0.100683
+Ke 0.0 0.0 0.0
+Ni 1.450000
+d 0.679181
+illum 6
+map_Kd water_BC.jpg
