@@ -62,6 +62,7 @@ fn main() {
 
     // ----- Модели ------
     let mut render_objects: Vec<RenderObject> = vec![];
+    let objects_container = load_glass_objects();
 
     // let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
     // let plane = obj_loader::load_model(plane_model_path);
@@ -80,10 +81,6 @@ fn main() {
     // // rend_obj.set_position(vec3(0.0, 0.35, 0.0));
     // // rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
     // render_objects.push(rend_obj);
-
-    // Куб
-    let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
-    let mut spawn_obj = obj_loader::load_model(model_path);
     
     // // Оружие под фонарем
     // let model_path = Path::new("Models/PliteFlor/Model.obj").to_str().unwrap();
@@ -209,6 +206,10 @@ fn main() {
 
     let mut is_light_togle = true;
     let mut is_half_light = false;
+
+    let mut objects_container_index = 0;
+    let mut is_spawn_test = false;
+    let mut spawning_obj_index = 0;
 
     // Первоначальная настройка рендера
     unsafe { 
@@ -364,8 +365,42 @@ fn main() {
                             event::KeyboardInput { scancode: 57397, state: event::ElementState::Pressed, ..} =>
                                 if camera.field_of_view() > 0.5 { camera.set_field_of_view(camera.field_of_view() - 0.5) },
 
+
+                            // Спавн объектов
+                            event::KeyboardInput { scancode: 2, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 0,
+                            event::KeyboardInput { scancode: 3, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 1,
+                            event::KeyboardInput { scancode: 4, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 2,
+                            event::KeyboardInput { scancode: 5, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 3,
+                            event::KeyboardInput { scancode: 6, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 4,
+                            event::KeyboardInput { scancode: 7, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 5,
+                            event::KeyboardInput { scancode: 8, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 6,
+                            event::KeyboardInput { scancode: 9, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 7,
+                            event::KeyboardInput { scancode: 10, state: event::ElementState::Released, ..} =>
+                                objects_container_index = 8,
+                            event::KeyboardInput { scancode: 11, state: event::ElementState::Released, ..} =>
+                                objects_container_index = objects_container.len(),
+
+                            event::KeyboardInput { scancode: 19, state: event::ElementState::Pressed, ..} =>
+                                {
+                                    if !is_spawn_test {
+                                        is_spawn_test = true;
+                                        if objects_container_index < objects_container.len() {
+                                            spawning_obj_index = render_objects.len();
+                                            spawn_object(&mut render_objects, &camera,
+                                            &objects_container[objects_container_index]);
+                                        }
+                                    }
+                                },
                             event::KeyboardInput { scancode: 19, state: event::ElementState::Released, ..} =>
-                                { spawn_object(&mut render_objects, &camera, &spawn_obj); },
+                                { is_spawn_test = false; },
 
                             // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                             _ => ()
@@ -520,6 +555,10 @@ fn main() {
                 //     }
                 // }
 
+                if is_spawn_test {
+                    spawn_test(&mut render_objects, &camera, spawning_obj_index);
+                }
+
                 shader_program.use_();
                 shader_program.set_uniform_int("draw_mode", draw_mode as i32);
 
@@ -588,8 +627,39 @@ fn generate_normal_vector() -> Vector3<f32> {
     vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0)
 }
 
+fn load_glass_objects() -> Vec<RenderObject> {
+    let mut container: Vec<RenderObject> = vec![];
+
+    let model_path = Path::new("Models/GlassCube/Blue/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    let model_path = Path::new("Models/GlassCube/Red/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    let model_path = Path::new("Models/GlassCube/Green/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    let model_path = Path::new("Models/GlassCube/Purple/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    return container;
+}
+
 fn spawn_object(render_objects: &mut Vec<RenderObject>, camera: &Camera, spawn_obj: &RenderObject) {
     let mut new_obj = spawn_obj.clone();
     new_obj.set_position(camera.position());
     render_objects.push(new_obj);
+}
+
+fn spawn_test(render_objects: &mut Vec<RenderObject>, camera: &Camera, obj_index: usize) {
+    let spawning_obj = &mut render_objects[obj_index];
+    let camera_direction = camera.direction() * camera.ortho_factor();
+    let camera_pos = camera.position();
+    let new_pow = Vector3 { x: camera_pos.x + -camera_direction.x, 
+        y: camera_pos.y + -camera_direction.y, z: camera_pos.z + -camera_direction.z };
+    spawning_obj.set_position(new_pow);
 }
