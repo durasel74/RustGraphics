@@ -16,25 +16,6 @@ impl Mesh {
         Mesh { render_data, indices_count, material }
     }
 
-    // Старый способ загрузки (Удалить)
-    pub fn from_obj(model: &obj::Obj<TexturedVertex, u32>) -> Self {
-        let obj_vertices = &model.vertices;
-        let obj_indices = &model.indices;
-
-        let mut vertices = Vec::new();
-        for i in obj_vertices {
-            let pos = Vector3 { x: i.position[0], y: i.position[1], z: i.position[2]};
-            let norm = Vector3 { x: i.normal[0], y: i.normal[1], z: i.normal[2] };
-            let tex = Vector2 { x: i.texture[0], y: i.texture[1] };
-            let vertex = Vertex { position: pos, normal: norm, tex_coords: tex };
-            vertices.push(vertex);
-        }
-        let render_data = RenderData::from_vertices(&vertices, obj_indices);
-        let indices_count = obj_indices.len() as u32;
-        let material = Material::new();
-        Mesh { render_data, indices_count, material }
-    }
-
     pub fn render_data(&self) -> &RenderData { &self.render_data }
     pub fn indices_count(&self) -> u32 { self.indices_count }
     pub fn material(&self) -> &Material { &self.material }

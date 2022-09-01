@@ -67,19 +67,24 @@ fn main() {
     // let plane = obj_loader::load_model(plane_model_path);
     // render_objects.push(plane);
     
-    // Машина в горах
-    let model_path = Path::new("Models/AmericanMuscle/Model.obj").to_str().unwrap();
+    // Снежные горы
+    let model_path = Path::new("Models/Hills/Model.obj").to_str().unwrap();
     let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(0.0, 0.35, 0.0));
-    // rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
+    rend_obj.set_position(vec3(0.0, 0.0, 40.0));
+    rend_obj.set_scale(100.0);
     render_objects.push(rend_obj);
     
-    // let model_path = Path::new("Models/Hills/Model.obj").to_str().unwrap();
+    // // Машина в горах
+    // let model_path = Path::new("Models/AmericanMuscle/Model.obj").to_str().unwrap();
     // let mut rend_obj = obj_loader::load_model(model_path);
-    // rend_obj.set_position(vec3(0.0, 0.0, 40.0));
-    // rend_obj.set_scale(100.0);
+    // // rend_obj.set_position(vec3(0.0, 0.35, 0.0));
+    // // rend_obj.set_rotation(vec3(0.0, 180.0, 0.0));
     // render_objects.push(rend_obj);
 
+    // Куб
+    let model_path = Path::new("Models/Cube/Model.obj").to_str().unwrap();
+    let mut spawn_obj = obj_loader::load_model(model_path);
+    
     // // Оружие под фонарем
     // let model_path = Path::new("Models/PliteFlor/Model.obj").to_str().unwrap();
     // let mut rend_obj = obj_loader::load_model(model_path);
@@ -104,11 +109,11 @@ fn main() {
     // rend_obj.set_position(vec3(0.0, 0.0, 0.0));
     // render_objects.push(rend_obj);
 
-    // Модерн город
-    let model_path = Path::new("Models/ModernCityBlock/Model.obj").to_str().unwrap();
-    let mut rend_obj = obj_loader::load_model(model_path);
-    rend_obj.set_position(vec3(0.0, 0.0, 0.0));
-    render_objects.push(rend_obj);
+    // // Модерн город
+    // let model_path = Path::new("Models/ModernCityBlock/Model.obj").to_str().unwrap();
+    // let mut rend_obj = obj_loader::load_model(model_path);
+    // rend_obj.set_position(vec3(0.0, 0.0, 0.0));
+    // render_objects.push(rend_obj);
 
 
 
@@ -360,7 +365,7 @@ fn main() {
                                 if camera.field_of_view() > 0.5 { camera.set_field_of_view(camera.field_of_view() - 0.5) },
 
                             event::KeyboardInput { scancode: 19, state: event::ElementState::Released, ..} =>
-                                { render_objects[0].set_position(camera.position()); },
+                                { spawn_object(&mut render_objects, &camera, &spawn_obj); },
 
                             // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                             _ => ()
@@ -581,4 +586,10 @@ fn generate_normal_vector() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
     let mut generator = || -> f32 { (rng.gen_range(0..1000) as f32) / 10.0 };
     vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0)
+}
+
+fn spawn_object(render_objects: &mut Vec<RenderObject>, camera: &Camera, spawn_obj: &RenderObject) {
+    let mut new_obj = spawn_obj.clone();
+    new_obj.set_position(camera.position());
+    render_objects.push(new_obj);
 }
