@@ -210,6 +210,8 @@ fn main() {
     let mut objects_container_index = 0;
     let mut is_spawn_test = false;
     let mut spawning_obj_index = 0;
+    let mut spawning_obj_scale = 1.0;
+    let mut spawning_obj_angle = 0.0;
 
     // Первоначальная настройка рендера
     unsafe { 
@@ -284,10 +286,6 @@ fn main() {
                                 down = false,
                             event::KeyboardInput { scancode: 57, state: event::ElementState::Released, ..} =>
                                 up = false,
-                            event::KeyboardInput { scancode: 57416, state: event::ElementState::Released, ..} =>
-                                is_light_togle = !is_light_togle,
-                            event::KeyboardInput { scancode: 57424, state: event::ElementState::Released, ..} =>
-                                is_half_light = !is_half_light,
                             event::KeyboardInput { scancode: 42, state: event::ElementState::Released, ..} =>
                                 { 
                                     current_speed_step = normal_speed_step; 
@@ -388,6 +386,15 @@ fn main() {
                             event::KeyboardInput { scancode: 11, state: event::ElementState::Released, ..} =>
                                 objects_container_index = objects_container.len(),
 
+                            event::KeyboardInput { scancode: 57416, state: event::ElementState::Pressed, ..} =>
+                                spawning_obj_scale += 0.1,
+                            event::KeyboardInput { scancode: 57424, state: event::ElementState::Pressed, ..} =>
+                                if spawning_obj_scale > 0.0 { spawning_obj_scale -= 0.1; },
+                            event::KeyboardInput { scancode: 57419, state: event::ElementState::Pressed, ..} =>
+                                spawning_obj_angle += 5.0,
+                            event::KeyboardInput { scancode: 57421, state: event::ElementState::Pressed, ..} =>
+                                spawning_obj_angle -= 5.0,
+
                             event::KeyboardInput { scancode: 19, state: event::ElementState::Pressed, ..} =>
                                 {
                                     if !is_spawn_test {
@@ -402,7 +409,7 @@ fn main() {
                             event::KeyboardInput { scancode: 19, state: event::ElementState::Released, ..} =>
                                 { is_spawn_test = false; },
 
-                            // event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
+                            //event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                             _ => ()
                         },
 
@@ -555,8 +562,10 @@ fn main() {
                 //     }
                 // }
 
+
                 if is_spawn_test {
-                    spawn_test(&mut render_objects, &camera, spawning_obj_index);
+                    spawn_test(&mut render_objects, &camera, spawning_obj_index, 
+                        spawning_obj_scale, yaw + spawning_obj_angle);
                 }
 
                 shader_program.use_();
@@ -646,6 +655,26 @@ fn load_glass_objects() -> Vec<RenderObject> {
     let rend_obj = obj_loader::load_model(model_path);
     container.push(rend_obj);
 
+    let model_path = Path::new("Models/GlassSphere/Blue/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    let model_path = Path::new("Models/GlassSphere/Red/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    let model_path = Path::new("Models/GlassSphere/Green/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    let model_path = Path::new("Models/GlassSphere/Purple/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
+    let model_path = Path::new("Models/AmericanMuscle/Model.obj").to_str().unwrap();
+    let rend_obj = obj_loader::load_model(model_path);
+    container.push(rend_obj);
+
     return container;
 }
 
@@ -655,11 +684,22 @@ fn spawn_object(render_objects: &mut Vec<RenderObject>, camera: &Camera, spawn_o
     render_objects.push(new_obj);
 }
 
-fn spawn_test(render_objects: &mut Vec<RenderObject>, camera: &Camera, obj_index: usize) {
+fn spawn_test(render_objects: &mut Vec<RenderObject>, camera: &Camera, 
+obj_index: usize, scale: f32, angle: f32) {
     let spawning_obj = &mut render_objects[obj_index];
     let camera_direction = camera.direction() * camera.ortho_factor();
     let camera_pos = camera.position();
-    let new_pow = Vector3 { x: camera_pos.x + -camera_direction.x, 
-        y: camera_pos.y + -camera_direction.y, z: camera_pos.z + -camera_direction.z };
+
+    let new_pow = Vector3 { 
+        x: camera_pos.x + -camera_direction.x, 
+        y: camera_pos.y + -camera_direction.y, 
+        z: camera_pos.z + -camera_direction.z };
     spawning_obj.set_position(new_pow);
+
+    let mut rotate = spawning_obj.rotation();
+    rotate.y = -angle;
+    spawning_obj.set_rotation(rotate);
+
+    spawning_obj.set_scale(scale);
+
 }
