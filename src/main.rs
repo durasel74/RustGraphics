@@ -1,6 +1,7 @@
 mod objects;
 
 use gl;
+use objects::ShaderProgram;
 use std::f32;
 use std::time;
 use std::path::Path;
@@ -209,7 +210,8 @@ fn main() {
 
     let mut objects_container_index = 0;
     let mut is_spawn_test = false;
-    let mut spawning_obj_index = 0;
+    let mut spawning_obj: Vec<RenderObject> = vec![];
+    // let mut spawning_obj_index = 0;
     let mut spawning_obj_scale = 1.0;
     let mut spawning_obj_angle = 0.0;
 
@@ -218,9 +220,13 @@ fn main() {
         gl::ClearColor(0.4, 0.6, 0.8, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
+
         gl::Enable(gl::CULL_FACE);
         gl::FrontFace(gl::CCW);
         gl::CullFace(gl::BACK);
+
+        gl::Enable(gl::STENCIL_TEST);
+        gl::StencilOp(gl::KEEP, gl::KEEP, gl::REPLACE); 
     }
 
     event_loop.run(move |event, _, control_flow| {
@@ -400,14 +406,15 @@ fn main() {
                                     if !is_spawn_test {
                                         is_spawn_test = true;
                                         if objects_container_index < objects_container.len() {
-                                            spawning_obj_index = render_objects.len();
-                                            spawn_object(&mut render_objects, &camera,
-                                            &objects_container[objects_container_index]);
+                                            spawning_obj.push(objects_container[objects_container_index].clone());
                                         }
                                     }
                                 },
                             event::KeyboardInput { scancode: 19, state: event::ElementState::Released, ..} =>
-                                { is_spawn_test = false; },
+                                {
+                                    is_spawn_test = false;
+                                    render_objects.push(spawning_obj.remove(0));
+                                },
 
                             //event::KeyboardInput { scancode, state, .. } => println!("{:?} {:?}", scancode, state),
                             _ => ()
@@ -430,9 +437,10 @@ fn main() {
             }
             event::Event::MainEventsCleared => {
                 unsafe {
-                    gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+                    gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                     set_cullface_mode(draw_mode);
+                    gl::StencilMask(0x00);
                 }
 
                 // Дельта времени
@@ -562,16 +570,54 @@ fn main() {
                 //     }
                 // }
 
-
-                if is_spawn_test {
-                    spawn_test(&mut render_objects, &camera, spawning_obj_index, 
-                        spawning_obj_scale, yaw + spawning_obj_angle);
-                }
-
                 shader_program.use_();
                 shader_program.set_uniform_int("draw_mode", draw_mode as i32);
 
                 view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light_objects);
+
+                if is_spawn_test {
+                    unsafe {
+                        gl::StencilFunc(gl::ALWAYS, 1, 0xFF);
+                        gl::StencilMask(0xFF);
+                    }
+
+                    let camera_direction = camera.direction() * camera.ortho_factor();
+                    let camera_pos = camera.position();
+
+                    let new_pos = Vector3 { 
+                        x: camera_pos.x + -camera_direction.x, 
+                        y: camera_pos.y + -camera_direction.y, 
+                        z: camera_pos.z + -camera_direction.z 
+                    };
+                    spawning_obj[0].set_position(new_pos);
+
+                    let mut rotate = spawning_obj[0].rotation();
+                    rotate.y = -(yaw + spawning_obj_angle);
+                    spawning_obj[0].set_rotation(rotate);
+                    spawning_obj[0].set_scale(spawning_obj_scale);
+
+                    shader_program.use_();
+                    shader_program.set_uniform_int("draw_mode", draw_mode as i32);
+                    view_port.draw(&shader_program, &light_shader_program, &mut camera, &spawning_obj, &light_objects);
+
+                    unsafe {
+                        gl::StencilFunc(gl::NOTEQUAL, 1, 0xFF);
+                        gl::StencilMask(0x00);
+                        gl::Disable(gl::DEPTH_TEST);
+                    }
+
+                    light_shader_program.use_();
+                    let mut select_effect = (&mut spawning_obj[0]).clone();
+                    select_effect.set_scale(select_effect.scale() + 0.1);
+                    view_port.draw(&light_shader_program, &light_shader_program, &mut camera, &vec![select_effect], &light_objects);
+
+                    unsafe {
+                        gl::StencilMask(0xFF);
+                        gl::StencilFunc(gl::ALWAYS, 1, 0xFF);
+                        gl::Enable(gl::DEPTH_TEST);
+                    }
+                }
+
                 windowed_context.swap_buffers().unwrap();
             }
             _ => (),
@@ -676,30 +722,4 @@ fn load_glass_objects() -> Vec<RenderObject> {
     container.push(rend_obj);
 
     return container;
-}
-
-fn spawn_object(render_objects: &mut Vec<RenderObject>, camera: &Camera, spawn_obj: &RenderObject) {
-    let mut new_obj = spawn_obj.clone();
-    new_obj.set_position(camera.position());
-    render_objects.push(new_obj);
-}
-
-fn spawn_test(render_objects: &mut Vec<RenderObject>, camera: &Camera, 
-obj_index: usize, scale: f32, angle: f32) {
-    let spawning_obj = &mut render_objects[obj_index];
-    let camera_direction = camera.direction() * camera.ortho_factor();
-    let camera_pos = camera.position();
-
-    let new_pow = Vector3 { 
-        x: camera_pos.x + -camera_direction.x, 
-        y: camera_pos.y + -camera_direction.y, 
-        z: camera_pos.z + -camera_direction.z };
-    spawning_obj.set_position(new_pow);
-
-    let mut rotate = spawning_obj.rotation();
-    rotate.y = -angle;
-    spawning_obj.set_rotation(rotate);
-
-    spawning_obj.set_scale(scale);
-
 }
