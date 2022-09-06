@@ -45,6 +45,7 @@ fn main() {
     let vert_filename = Path::new("Shaders/object.vert").to_str().unwrap();
     let frag_filename = Path::new("Shaders/object.frag").to_str().unwrap();
     let light_frag_filename = Path::new("Shaders/light.frag").to_str().unwrap();
+    let select_frag_filename = Path::new("Shaders/select.frag").to_str().unwrap();
 
     // Загрузка и компиляция шейдеров
     let shader_loadresult = objects::ShaderProgram::from_files(
@@ -57,6 +58,13 @@ fn main() {
     let shader_loadresult = objects::ShaderProgram::from_files(
         vert_filename, light_frag_filename);
     let light_shader_program = match shader_loadresult {
+        Ok(program) => program,
+        Err(err) => { println!("{}", err); return }
+    };
+
+    let shader_loadresult = objects::ShaderProgram::from_files(
+        vert_filename, select_frag_filename);
+    let select_shader_program = match shader_loadresult {
         Ok(program) => program,
         Err(err) => { println!("{}", err); return }
     };
@@ -598,7 +606,8 @@ fn main() {
 
                     shader_program.use_();
                     shader_program.set_uniform_int("draw_mode", draw_mode as i32);
-                    view_port.draw(&shader_program, &light_shader_program, &mut camera, &spawning_obj, &light_objects);
+                    view_port.draw(&shader_program, &light_shader_program, 
+                        &mut camera, &spawning_obj, &light_objects);
 
                     unsafe {
                         gl::StencilFunc(gl::NOTEQUAL, 1, 0xFF);
@@ -606,10 +615,14 @@ fn main() {
                         gl::Disable(gl::DEPTH_TEST);
                     }
 
-                    light_shader_program.use_();
-                    let mut select_effect = (&mut spawning_obj[0]).clone();
-                    select_effect.set_scale(select_effect.scale() + 0.1);
-                    view_port.draw(&light_shader_program, &light_shader_program, &mut camera, &vec![select_effect], &light_objects);
+                    let obj_scale = spawning_obj[0].scale();
+                    let border_size = 0.1 * obj_scale;
+                    spawning_obj[0].set_scale(obj_scale + border_size);
+                    select_shader_program.use_();
+                    view_port.draw(&select_shader_program, 
+                        &select_shader_program, &mut camera, 
+                        &spawning_obj, &light_objects);
+                    spawning_obj[0].set_scale(obj_scale);
 
                     unsafe {
                         gl::StencilMask(0xFF);
