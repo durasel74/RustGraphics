@@ -60,19 +60,26 @@ uniform sampler2D texture_specular;
 
 uniform int draw_mode;
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
-vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
-vec3 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir);
+vec4 diff_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+vec4 spec_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec4 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec4 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir);
+void PrepareTextureFragment();
 
 void main()
 {
-    vec3 result = vec3(0.0f, 0.0f, 0.0f);
+    vec4 result = vec4(0.0f, 0.0f, 0.0f, 1.0f);
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(-FragPos);
 
     if (draw_mode == 0)
     {
+        vec4 texColor = texture(texture_diffuse, TexCoords);
+        if(texColor.a < 0.001) discard;
+
         for(int i = 0; i < dirLightCount; i++)
             result += CalcDirLight(dirLights[i], norm, viewDir);
         for(int i = 0; i < pointLightCount; i++)
@@ -90,12 +97,12 @@ void main()
         );
         result = CalcDirLightTest(dirLight, norm, viewDir);
     }
-    else result = vec3(1.0f, 1.0f, 1.0f);
+    else result = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-    FragColor = vec4(result, 1.0);
+    FragColor = result;
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
+vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDirection = vec3(View * vec4(light.direction, 0.0));
     vec3 lightDir = normalize(-lightDirection);
@@ -104,18 +111,15 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     if (material.shininess == 0) spec = 0;
 
-    vec3 diff_tex = vec3(texture(texture_diffuse, TexCoords));
-    vec3 spec_tex = vec3(texture(texture_specular, TexCoords));
-    if (diff_tex == vec3(0.0f, 0.0f, 0.0f)) diff_tex = vec3(1.0f, 1.0f, 1.0f);
-    if (spec_tex == vec3(0.0f, 0.0f, 0.0f)) spec_tex = vec3(1.0f, 1.0f, 1.0f);
+    PrepareTextureFragment();
 
-    vec3 ambient = light.ambient * material.ambient * diff_tex;
-    vec3 diffuse = light.diffuse * diff * material.diffuse * diff_tex;
-    vec3 specular = light.specular * spec * material.specular * spec_tex;
+    vec4 ambient = vec4(light.ambient, 1.0f) * vec4(material.ambient, 1.0f) * diff_tex;
+    vec4 diffuse = vec4(light.diffuse, 1.0f) * diff * vec4(material.diffuse, 1.0f) * diff_tex;
+    vec4 specular = vec4(light.specular, 1.0f) * spec * vec4(material.specular, 1.0f) * spec_tex;
     return (ambient + diffuse + specular);
 }
 
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightPosition = vec3(View * vec4(light.position, 1.0));
     vec3 lightDir = normalize(lightPosition - fragPos);
@@ -128,21 +132,18 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float attenuation = 1.0 / (light.constant + light.linear * distance + 
         light.quadratic * (distance * distance));
 
-    vec3 diff_tex = vec3(texture(texture_diffuse, TexCoords));
-    vec3 spec_tex = vec3(texture(texture_specular, TexCoords));
-    if (diff_tex == vec3(0.0f, 0.0f, 0.0f)) diff_tex = vec3(1.0f, 1.0f, 1.0f);
-    if (spec_tex == vec3(0.0f, 0.0f, 0.0f)) spec_tex = vec3(1.0f, 1.0f, 1.0f);
+    PrepareTextureFragment();
     
-    vec3 ambient = light.ambient * material.ambient * diff_tex;
-    vec3 diffuse = light.diffuse * diff * material.diffuse * diff_tex;
-    vec3 specular = light.specular * spec * material.specular * spec_tex;
+    vec4 ambient = vec4(light.ambient, 1.0f) * vec4(material.ambient, 1.0f) * diff_tex;
+    vec4 diffuse = vec4(light.diffuse, 1.0f) * diff * vec4(material.diffuse, 1.0f) * diff_tex;
+    vec4 specular = vec4(light.specular, 1.0f) * spec * vec4(material.specular, 1.0f) * spec_tex;
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
     return (ambient + diffuse + specular);
 }
 
-vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec4 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightPosition = vec3(View * vec4(light.position, 1.0));
     vec3 lightDirection = vec3(View * vec4(light.direction, 0.0));
@@ -156,20 +157,17 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float epsilon = light.cutOff - light.outerCutOff;
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 
-    vec3 diff_tex = vec3(texture(texture_diffuse, TexCoords));
-    vec3 spec_tex = vec3(texture(texture_specular, TexCoords));
-    if (diff_tex == vec3(0.0f, 0.0f, 0.0f)) diff_tex = vec3(1.0f, 1.0f, 1.0f);
-    if (spec_tex == vec3(0.0f, 0.0f, 0.0f)) spec_tex = vec3(1.0f, 1.0f, 1.0f);
+    PrepareTextureFragment();
 
-    vec3 ambient = light.ambient * material.ambient * diff_tex;
-    vec3 diffuse = light.diffuse * diff * material.diffuse * diff_tex;
-    vec3 specular = light.specular * spec * material.specular * spec_tex;
+    vec4 ambient = vec4(light.ambient, 1.0f) * vec4(material.ambient, 1.0f) * diff_tex;
+    vec4 diffuse = vec4(light.diffuse, 1.0f) * diff * vec4(material.diffuse, 1.0f) * diff_tex;
+    vec4 specular = vec4(light.specular, 1.0f) * spec * vec4(material.specular, 1.0f) * spec_tex;
     diffuse *= intensity;
     specular *= intensity;
     return (ambient + diffuse + specular);
 }
 
-vec3 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir)
+vec4 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDirection = vec3(View * vec4(light.direction, 0.0));
     vec3 lightDir = normalize(-lightDirection);
@@ -177,5 +175,15 @@ vec3 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir)
 
     vec3 ambient = light.ambient * vec3(0.2f, 0.2f, 0.2f);
     vec3 diffuse = light.diffuse * diff * vec3(1.0f, 1.0f, 1.0f);
-    return (ambient + diffuse);
+    return vec4((ambient + diffuse), 1.0f);
+}
+
+void PrepareTextureFragment()
+{
+    diff_tex = texture(texture_diffuse, TexCoords);
+    spec_tex = texture(texture_specular, TexCoords);
+    if (vec3(diff_tex) == vec3(0.0f, 0.0f, 0.0f)) 
+        diff_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    if (vec3(spec_tex) == vec3(0.0f, 0.0f, 0.0f)) 
+        spec_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 }

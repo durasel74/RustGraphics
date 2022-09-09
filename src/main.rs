@@ -726,7 +726,11 @@ fn load_glass_objects() -> Vec<RenderObject> {
     let rend_obj = obj_loader::load_model(model_path);
     container.push(rend_obj);
 
-    let model_path = Path::new("Models/GlassSphere/Purple/Model.obj").to_str().unwrap();
+    // let model_path = Path::new("Models/GlassSphere/Purple/Model.obj").to_str().unwrap();
+    // let rend_obj = obj_loader::load_model(model_path);
+    // container.push(rend_obj);
+
+    let model_path = Path::new("Models/Grass/Model.obj").to_str().unwrap();
     let rend_obj = obj_loader::load_model(model_path);
     container.push(rend_obj);
 
