@@ -3,6 +3,7 @@ mod objects;
 use gl;
 use objects::ShaderProgram;
 use std::f32;
+use std::ops::Deref;
 use std::time;
 use std::path::Path;
 use rand::Rng;
@@ -71,7 +72,7 @@ fn main() {
 
     // ----- Модели ------
     let mut render_objects: Vec<RenderObject> = vec![];
-    let objects_container = load_glass_objects();
+    let objects_container = load_spawn_objects();
 
     // let plane_model_path = Path::new("Models/Plane/Model.obj").to_str().unwrap();
     // let plane = obj_loader::load_model(plane_model_path);
@@ -129,18 +130,15 @@ fn main() {
     // ----- Светильники ------
     let mut light_objects: Vec<Light> = vec![];
 
+    let mut new_object = Light::new();
+    new_object.set_direction(vec3(4.0, -5.0, -4.0));
+    new_object.set_ambient(vec3(0.2, 0.2, 0.2));
+    new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
+    new_object.set_specular(vec3(1.0, 1.0, 1.0));
+    new_object.set_light_type(LightType::Directional);
+    light_objects.push(new_object);
+    
     // let mut new_object = Light::new();
-    // new_object.set_ambient(vec3(0.0, 0.0, 0.0));
-    // new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
-    // new_object.set_specular(vec3(1.0, 1.0, 1.0));
-    // new_object.set_cut_off(15.0);
-    // new_object.set_outer_cut_off(25.0);
-    // new_object.set_light_type(LightType::Spotlight);
-    // light_objects.push(new_object);
-
-    // let mut new_object = Light::new();
-    // new_object.set_position(vec3(0.0, 10.0, 0.0));
-    // new_object.set_direction(vec3(0.0, -1.0, 0.0));
     // new_object.set_ambient(vec3(0.0, 0.0, 0.0));
     // new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
     // new_object.set_specular(vec3(1.0, 1.0, 1.0));
@@ -150,24 +148,15 @@ fn main() {
     // light_objects.push(new_object);
 
     let mut new_object = Light::new();
-    new_object.set_direction(vec3(4.0, -5.0, -4.0));
+    new_object.set_position(vec3(0.0, 1.0, -5.0));
     new_object.set_ambient(vec3(0.2, 0.2, 0.2));
-    new_object.set_diffuse(vec3(1.0, 1.0, 1.0));
-    new_object.set_specular(vec3(1.0, 1.0, 1.0));
-    new_object.set_light_type(LightType::Directional);
+    new_object.set_diffuse(vec3(0.2, 0.2, 1.0));
+    new_object.set_specular(vec3(0.2, 0.2, 1.0));
+    new_object.set_constant(1.0);
+    new_object.set_linear(0.022);
+    new_object.set_quadratic(0.0019);
+    new_object.set_light_type(LightType::Point);
     light_objects.push(new_object);
-
-    // let mut new_object = Light::new();
-    // new_object.set_position(vec3(0.0, 1.0, -5.0));
-    // new_object.set_ambient(vec3(0.2, 0.2, 0.2));
-    // new_object.set_diffuse(vec3(0.2, 0.2, 1.0));
-    // new_object.set_specular(vec3(0.2, 0.2, 1.0));
-    // new_object.set_constant(1.0);
-    // new_object.set_linear(0.022);
-    // new_object.set_quadratic(0.0019);
-    // new_object.set_light_type(LightType::Point);
-    // new_object.set_meshes(light_meshes);
-    // light_objects.push(new_object);
     // ---------------------------------------------------
 
     let mut view_port = ViewPort::new();
@@ -213,9 +202,6 @@ fn main() {
     let mut delta_x = 0.0;
     let mut delta_y = 0.0;
 
-    let mut is_light_togle = true;
-    let mut is_half_light = false;
-
     let mut objects_container_index = 0;
     let mut is_spawn_test = false;
     let mut spawning_obj: Vec<RenderObject> = vec![];
@@ -228,13 +214,18 @@ fn main() {
         gl::ClearColor(0.4, 0.6, 0.8, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::STENCIL_TEST);
+        gl::StencilOp(gl::KEEP, gl::KEEP, gl::REPLACE); 
 
         gl::Enable(gl::CULL_FACE);
         gl::FrontFace(gl::CCW);
         gl::CullFace(gl::BACK);
-
-        gl::Enable(gl::STENCIL_TEST);
-        gl::StencilOp(gl::KEEP, gl::KEEP, gl::REPLACE); 
+        
+        gl::Enable(gl::BLEND);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        gl::BlendEquation(gl::FUNC_ADD);
+        // gl::BlendColor(0.5, 0.0, 0.0, 0.0);
+        // gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA, gl::ONE, gl::ZERO);
     }
 
     event_loop.run(move |event, _, control_flow| {
@@ -505,33 +496,6 @@ fn main() {
                     camera.set_ortho_factor(camera.ortho_factor() - c_speed); 
                 }
 
-
-                if !is_half_light && is_light_togle {
-                    for i in light_objects.iter_mut() {
-                        if i.power() < 1.1 {
-                            let pos = i.position();
-                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                            i.set_power(i.power() + lenght / (2100.0 * 25.0));
-                        }
-                    }
-                }
-                if !is_light_togle {
-                    for i in light_objects.iter_mut() {
-                        if i.power() > 0.0001 && (i.radius() > 11.0 || i.radius() < 10.0) {
-                            let pos = i.position();
-                            let lenght = 2100.0 - (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt();
-                            i.set_power(i.power() - lenght / (2100.0 * 8.0));
-                        }
-                    }
-                }
-                if is_half_light {
-                    let mut light = &mut light_objects[0];
-                    if light.power() > 0.0001 {
-                        light.set_power(light.power() - 2100.0 / (2100.0 * 25.0));
-                    }
-                }
-
-
                 let offset_x = delta_x * sensitivity * delta_time as f64;
                 let offset_y = delta_y * sensitivity * delta_time as f64;
                 delta_x = 0.0;
@@ -561,9 +525,13 @@ fn main() {
                     ));
                 }
 
-                // // Движение фонаря за камерой
-                // light_objects[0].set_direction(-camera.direction());
-                // light_objects[0].set_position(camera.position());
+                // Движение фонаря за камерой
+                let flash_light = light_objects.iter_mut().find(
+                    |l| l.light_type() == &LightType::Spotlight);
+                if let Some(light_object) = flash_light {
+                    light_object.set_direction(-camera.direction());
+                    light_object.set_position(camera.position());
+                }
 
                 // // Вращение по кругу
                 // let elapsed_time = now.elapsed();
@@ -577,6 +545,8 @@ fn main() {
                 //         i.set_position(vec3(camx, camy, camz));
                 //     }
                 // }
+
+                depth_sort_objects(&mut render_objects, &camera);
 
                 shader_program.use_();
                 shader_program.set_uniform_int("draw_mode", draw_mode as i32);
@@ -669,33 +639,7 @@ fn prompt_for_video_mode(monitor: &monitor::MonitorHandle) -> monitor::VideoMode
     monitor.video_modes().nth(0).unwrap()
 }
 
-fn generate_float() -> f32 {
-    let mut rng = rand::thread_rng();
-    let result = rng.gen_range(0.0..256.0);
-    return result;
-}
-
-fn generate_vector() -> Vector3<f32> {
-    let mut rng = rand::thread_rng();
-    let random1 = (rng.gen_range(-1000..1000) as f32) / 100.0;
-    let random2 = (rng.gen_range(-1000..1000) as f32) / 100.0;
-    let theta1 = random1 * 2.0 * f32::consts::PI;
-    let theta2 = random2 * 2.0 * f32::consts::PI;
-    let radius = (rng.gen_range(0..0_500_000) as f32).cbrt();
-
-    let x = radius * (theta1.cos() * theta2.sin());
-    let y = radius * theta1.sin();
-    let z = radius * (theta1.cos() * theta2.cos());
-    vec3(x, y, z)
-}
-
-fn generate_normal_vector() -> Vector3<f32> {
-    let mut rng = rand::thread_rng();
-    let mut generator = || -> f32 { (rng.gen_range(0..1000) as f32) / 10.0 };
-    vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0)
-}
-
-fn load_glass_objects() -> Vec<RenderObject> {
+fn load_spawn_objects() -> Vec<RenderObject> {
     let mut container: Vec<RenderObject> = vec![];
 
     let model_path = Path::new("Models/GlassCube/Blue/Model.obj").to_str().unwrap();
@@ -730,7 +674,7 @@ fn load_glass_objects() -> Vec<RenderObject> {
     // let rend_obj = obj_loader::load_model(model_path);
     // container.push(rend_obj);
 
-    let model_path = Path::new("Models/Grass/Model.obj").to_str().unwrap();
+    let model_path = Path::new("Models/GlassWindow/Model.obj").to_str().unwrap();
     let rend_obj = obj_loader::load_model(model_path);
     container.push(rend_obj);
 
@@ -740,3 +684,52 @@ fn load_glass_objects() -> Vec<RenderObject> {
 
     return container;
 }
+
+fn depth_sort_objects(objects: &mut Vec<RenderObject>, camera: &Camera) {
+    for i in 1..objects.len() {
+        for j in (1..i + 1).rev() {
+            let first_distance = get_vector_length(
+                camera.position(), 
+                objects[j - 1].position());
+            let second_distance = get_vector_length(
+                camera.position(), 
+                objects[j].position());
+
+            if first_distance >= second_distance { break; }
+            objects.swap(j - 1, j);
+        }
+    }
+}
+
+fn get_vector_length(a: Vector3<f32>, b: Vector3<f32>) -> f32 {
+    let x = (b.x - a.x).powi(2);
+    let y = (b.y - a.y).powi(2);
+    let z = (b.z - a.z).powi(2);
+    (x + y + z).sqrt()
+}
+
+// fn generate_float() -> f32 {
+//     let mut rng = rand::thread_rng();
+//     let result = rng.gen_range(0.0..256.0);
+//     return result;
+// }
+
+// fn generate_vector() -> Vector3<f32> {
+//     let mut rng = rand::thread_rng();
+//     let random1 = (rng.gen_range(-1000..1000) as f32) / 100.0;
+//     let random2 = (rng.gen_range(-1000..1000) as f32) / 100.0;
+//     let theta1 = random1 * 2.0 * f32::consts::PI;
+//     let theta2 = random2 * 2.0 * f32::consts::PI;
+//     let radius = (rng.gen_range(0..0_500_000) as f32).cbrt();
+
+//     let x = radius * (theta1.cos() * theta2.sin());
+//     let y = radius * theta1.sin();
+//     let z = radius * (theta1.cos() * theta2.cos());
+//     vec3(x, y, z)
+// }
+
+// fn generate_normal_vector() -> Vector3<f32> {
+//     let mut rng = rand::thread_rng();
+//     let mut generator = || -> f32 { (rng.gen_range(0..1000) as f32) / 10.0 };
+//     vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0)
+// }

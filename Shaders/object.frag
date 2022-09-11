@@ -5,6 +5,7 @@ struct Material {
     vec3 diffuse;
     vec3 specular;
     float shininess;
+    float dissolve;
 };
 
 struct DirLight {
@@ -63,22 +64,24 @@ uniform int draw_mode;
 vec4 diff_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 vec4 spec_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
-vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
-vec4 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
-vec4 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir);
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir);
 void PrepareTextureFragment();
 
 void main()
 {
-    vec4 result = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    vec3 result = vec3(0.0f, 0.0f, 0.0f);
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(-FragPos);
+    float dissolve = 1.0f;
 
     if (draw_mode == 0)
     {
-        vec4 texColor = texture(texture_diffuse, TexCoords);
-        if(texColor.a < 0.001) discard;
+        PrepareTextureFragment();
+        if(diff_tex.a < 0.001) discard;
+        dissolve = material.dissolve * diff_tex.w;
 
         for(int i = 0; i < dirLightCount; i++)
             result += CalcDirLight(dirLights[i], norm, viewDir);
@@ -97,12 +100,12 @@ void main()
         );
         result = CalcDirLightTest(dirLight, norm, viewDir);
     }
-    else result = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    else result = vec3(1.0f, 1.0f, 1.0f);
 
-    FragColor = result;
+    FragColor = vec4(result, dissolve);
 }
 
-vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDirection = vec3(View * vec4(light.direction, 0.0));
     vec3 lightDir = normalize(-lightDirection);
@@ -111,15 +114,13 @@ vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     if (material.shininess == 0) spec = 0;
 
-    PrepareTextureFragment();
-
-    vec4 ambient = vec4(light.ambient, 1.0f) * vec4(material.ambient, 1.0f) * diff_tex;
-    vec4 diffuse = vec4(light.diffuse, 1.0f) * diff * vec4(material.diffuse, 1.0f) * diff_tex;
-    vec4 specular = vec4(light.specular, 1.0f) * spec * vec4(material.specular, 1.0f) * spec_tex;
+    vec3 ambient = light.ambient * material.ambient * vec3(diff_tex);
+    vec3 diffuse = light.diffuse * diff * material.diffuse * vec3(diff_tex);
+    vec3 specular = light.specular * spec * material.specular * vec3(spec_tex);
     return (ambient + diffuse + specular);
 }
 
-vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightPosition = vec3(View * vec4(light.position, 1.0));
     vec3 lightDir = normalize(lightPosition - fragPos);
@@ -131,19 +132,17 @@ vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float distance = length(lightPosition - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + 
         light.quadratic * (distance * distance));
-
-    PrepareTextureFragment();
     
-    vec4 ambient = vec4(light.ambient, 1.0f) * vec4(material.ambient, 1.0f) * diff_tex;
-    vec4 diffuse = vec4(light.diffuse, 1.0f) * diff * vec4(material.diffuse, 1.0f) * diff_tex;
-    vec4 specular = vec4(light.specular, 1.0f) * spec * vec4(material.specular, 1.0f) * spec_tex;
+    vec3 ambient = light.ambient * material.ambient * vec3(diff_tex);
+    vec3 diffuse = light.diffuse * diff * material.diffuse * vec3(diff_tex);
+    vec3 specular = light.specular * spec * material.specular * vec3(spec_tex);
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
     return (ambient + diffuse + specular);
 }
 
-vec4 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightPosition = vec3(View * vec4(light.position, 1.0));
     vec3 lightDirection = vec3(View * vec4(light.direction, 0.0));
@@ -157,17 +156,15 @@ vec4 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float epsilon = light.cutOff - light.outerCutOff;
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 
-    PrepareTextureFragment();
-
-    vec4 ambient = vec4(light.ambient, 1.0f) * vec4(material.ambient, 1.0f) * diff_tex;
-    vec4 diffuse = vec4(light.diffuse, 1.0f) * diff * vec4(material.diffuse, 1.0f) * diff_tex;
-    vec4 specular = vec4(light.specular, 1.0f) * spec * vec4(material.specular, 1.0f) * spec_tex;
+    vec3 ambient = light.ambient * material.ambient * vec3(diff_tex);
+    vec3 diffuse = light.diffuse * diff * material.diffuse * vec3(diff_tex);
+    vec3 specular = light.specular * spec * material.specular * vec3(spec_tex);
     diffuse *= intensity;
     specular *= intensity;
     return (ambient + diffuse + specular);
 }
 
-vec4 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir)
+vec3 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDirection = vec3(View * vec4(light.direction, 0.0));
     vec3 lightDir = normalize(-lightDirection);
@@ -175,15 +172,15 @@ vec4 CalcDirLightTest(DirLight light, vec3 normal, vec3 viewDir)
 
     vec3 ambient = light.ambient * vec3(0.2f, 0.2f, 0.2f);
     vec3 diffuse = light.diffuse * diff * vec3(1.0f, 1.0f, 1.0f);
-    return vec4((ambient + diffuse), 1.0f);
+    return (ambient + diffuse);
 }
 
 void PrepareTextureFragment()
 {
     diff_tex = texture(texture_diffuse, TexCoords);
     spec_tex = texture(texture_specular, TexCoords);
-    if (vec3(diff_tex) == vec3(0.0f, 0.0f, 0.0f)) 
+    if (vec3(diff_tex) == vec3(0.0f, 0.0f, 0.0f))
         diff_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    if (vec3(spec_tex) == vec3(0.0f, 0.0f, 0.0f)) 
+    if (vec3(spec_tex) == vec3(0.0f, 0.0f, 0.0f))
         spec_tex = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 }

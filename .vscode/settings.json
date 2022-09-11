@@ -1,0 +1,8 @@
+{
+    "rust-analyzer.completion.autoself.enable": false,
+    "rust-analyzer.completion.privateEditable.enable": true,
+    "rust-analyzer.hover.links.enable": true,
+    "rust-analyzer.inlayHints.chainingHints.enable": true,
+    "rust-analyzer.inlayHints.typeHints.enable": false,
+    "rust-analyzer.inlayHints.parameterHints.enable": false
+}

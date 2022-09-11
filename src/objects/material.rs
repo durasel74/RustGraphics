@@ -8,6 +8,7 @@ pub struct Material {
     pub diffuse: Vector3<f32>,
     pub specular: Vector3<f32>,
     pub specular_exponent: f32,
+    pub dissolve: f32,
     pub diff_tex: Option<Texture>,
     pub spec_tex: Option<Texture>,
 }
@@ -19,6 +20,7 @@ impl Material {
             diffuse: vec3(0.8, 0.8, 0.8),
             specular: vec3(0.8, 0.8, 0.8),
             specular_exponent: 0.0,
+            dissolve: 0.0,
             diff_tex: None,
             spec_tex: None,
         }
@@ -41,6 +43,10 @@ impl Material {
         if let Some(value) = material.specular_exponent {
             specular_exponent = value;
         }
+        let mut dissolve = 0.0;
+        if let Some(value) = material.dissolve {
+            dissolve = value;
+        }
 
         let mut diff_tex = None;
         if let Some(tex) = &material.diffuse_map {
@@ -52,7 +58,7 @@ impl Material {
             let tex_path = format!("{}/{}", folder_path, &tex.file);
             spec_tex = Some(Texture::from_file(&tex_path).unwrap());
         };
-        Material { ambient, diffuse, specular, specular_exponent, diff_tex, spec_tex }
+        Material { ambient, diffuse, specular, specular_exponent, dissolve, diff_tex, spec_tex }
     }
 
     fn mtl_color_to_vector(color: &material::MtlColor) -> Vector3<f32> {
