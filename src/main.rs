@@ -222,10 +222,8 @@ fn main() {
         gl::CullFace(gl::BACK);
         
         gl::Enable(gl::BLEND);
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::BlendEquation(gl::FUNC_ADD);
-        // gl::BlendColor(0.5, 0.0, 0.0, 0.0);
-        // gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA, gl::ONE, gl::ZERO);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
     }
 
     event_loop.run(move |event, _, control_flow| {
