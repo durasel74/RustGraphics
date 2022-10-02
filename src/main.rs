@@ -1,7 +1,8 @@
 mod objects;
 
 use gl;
-use objects::ShaderProgram;
+use obj::raw::material::Material;
+use objects::{ShaderProgram, obj_loader, Vertex};
 use std::f32;
 use std::ops::Deref;
 use std::time;
@@ -9,8 +10,8 @@ use std::path::Path;
 use rand::Rng;
 
 use cgmath::prelude::InnerSpace;
-use cgmath::{ Matrix4, Vector3, vec3 };
-use objects::{ RenderObject, Camera, ViewPort, Light, LightType, obj_loader };
+use cgmath::{ Matrix4, Vector2, Vector3, vec2, vec3 };
+use objects::{ RenderObject, Mesh, Camera, ViewPort, Light, LightType, FrameBuffer };
 
 use glutin;
 use glutin::window;
@@ -47,6 +48,8 @@ fn main() {
     let frag_filename = Path::new("Shaders/object.frag").to_str().unwrap();
     let light_frag_filename = Path::new("Shaders/light.frag").to_str().unwrap();
     let select_frag_filename = Path::new("Shaders/select.frag").to_str().unwrap();
+    let frame_buffer_vert_filename = Path::new("Shaders/frame_buffer.vert").to_str().unwrap();
+    let frame_buffer_frag_filename = Path::new("Shaders/frame_buffer.frag").to_str().unwrap();
 
     // Загрузка и компиляция шейдеров
     let shader_loadresult = objects::ShaderProgram::from_files(
@@ -66,6 +69,13 @@ fn main() {
     let shader_loadresult = objects::ShaderProgram::from_files(
         vert_filename, select_frag_filename);
     let select_shader_program = match shader_loadresult {
+        Ok(program) => program,
+        Err(err) => { println!("{}", err); return }
+    };
+
+    let shader_loadresult = objects::ShaderProgram::from_files(
+        frame_buffer_vert_filename, frame_buffer_frag_filename);
+    let frame_buffer_shader_program = match shader_loadresult {
         Ok(program) => program,
         Err(err) => { println!("{}", err); return }
     };
@@ -209,13 +219,18 @@ fn main() {
     let mut spawning_obj_scale = 1.0;
     let mut spawning_obj_angle = 0.0;
 
+    let win_width = windowed_context.window().inner_size().width;
+    let win_height = windowed_context.window().inner_size().height;
+    let mut frame_buffer = FrameBuffer::new(win_width, win_height).unwrap();
+    let mut frame_buffer_mesh = create_frame_buffer_mesh(&frame_buffer);
+
     // Первоначальная настройка рендера
     unsafe { 
         gl::ClearColor(0.4, 0.6, 0.8, 1.0);
         gl::PointSize(3.0);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::STENCIL_TEST);
-        gl::StencilOp(gl::KEEP, gl::KEEP, gl::REPLACE); 
+        gl::StencilOp(gl::KEEP, gl::KEEP, gl::REPLACE);
 
         gl::Enable(gl::CULL_FACE);
         gl::FrontFace(gl::CCW);
@@ -235,10 +250,12 @@ fn main() {
                     event::WindowEvent::CloseRequested =>
                         *control_flow = event_loop::ControlFlow::Exit,
                     event::WindowEvent::Resized(physical_size) => unsafe {
-                        let view_width = physical_size.width as i32;
-                        let view_height = physical_size.height as i32;
+                        let view_width = windowed_context.window().inner_size().width as i32;
+                        let view_height = windowed_context.window().inner_size().height as i32;
                         view_port.set_position((0, 0));
                         view_port.set_size((view_width, view_height));
+                        frame_buffer = FrameBuffer::new(view_width as u32, view_height as u32).unwrap();
+                        frame_buffer_mesh = create_frame_buffer_mesh(&frame_buffer);
                     },
                     event::WindowEvent::Focused(is_focus) => 
                         window_is_focused = is_focus,
@@ -403,6 +420,14 @@ fn main() {
                                     if !is_spawn_test {
                                         is_spawn_test = true;
                                         if objects_container_index < objects_container.len() {
+                                            // let obj = objects_container[objects_container_index].clone();
+                                            // let mut mesh = obj.meshes()[0].clone();
+                                            // let mut material = mesh.material().clone();
+                                            // material.diff_tex = Some(frame_buffer.color_buffer.clone());
+                                            // mesh.set_material(material.clone());
+                                            // let ok = RenderObject::from_mesh(mesh.clone());
+                                            // spawning_obj.push(ok.clone());
+
                                             spawning_obj.push(objects_container[objects_container_index].clone());
                                         }
                                     }
@@ -434,6 +459,11 @@ fn main() {
             }
             event::Event::MainEventsCleared => {
                 unsafe {
+                    gl::ClearColor(0.4, 0.6, 0.8, 1.0);
+                    gl::Enable(gl::DEPTH_TEST);
+                    gl::Enable(gl::STENCIL_TEST);
+
+                    gl::BindFramebuffer(gl::FRAMEBUFFER, frame_buffer.fbo);
                     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
                     gl::PolygonMode(gl::FRONT_AND_BACK, to_draw_mode(draw_mode));
                     set_cullface_mode(draw_mode);
@@ -444,11 +474,6 @@ fn main() {
                 let since_time = now.elapsed().as_secs_f32();
                 let delta_time = (since_time - old_since_time) * 10.0;
                 old_since_time = since_time;
-
-                let view_width = windowed_context.window().inner_size().width as i32;
-                let view_height = windowed_context.window().inner_size().height as i32;
-                view_port.set_position((0, 0));
-                view_port.set_size((view_width, view_height));
 
                 // Управление
                 let mut matrix = Matrix4::from_scale(1.0);
@@ -531,32 +556,8 @@ fn main() {
                     light_object.set_position(camera.position());
                 }
 
-                // // Вращение по кругу
-                // let elapsed_time = now.elapsed();
-                // let rotate_value = elapsed_time.as_millis() as f32;
-                // for i in light_objects.iter_mut() {
-                //     if i.radius() > 10.0 {
-                //         let slow_multiple = i.radius() * 20.0;
-                //         let camx = (rotate_value / slow_multiple).sin() * i.radius();
-                //         let camy = ((rotate_value / slow_multiple) + i.radius()).cos() * i.radius();
-                //         let camz = (rotate_value / slow_multiple).cos() * i.radius();
-                //         i.set_position(vec3(camx, camy, camz));
-                //     }
-                // }
-
-                depth_sort_objects(&mut render_objects, &camera);
-
-                shader_program.use_();
-                shader_program.set_uniform_int("draw_mode", draw_mode as i32);
-
-                view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light_objects);
-
+                // Измененеие положения объекта перед размещением
                 if is_spawn_test {
-                    unsafe {
-                        gl::StencilFunc(gl::ALWAYS, 1, 0xFF);
-                        gl::StencilMask(0xFF);
-                    }
-
                     let camera_direction = camera.direction() * camera.ortho_factor();
                     let camera_pos = camera.position();
 
@@ -571,34 +572,23 @@ fn main() {
                     rotate.y = -(yaw + spawning_obj_angle);
                     spawning_obj[0].set_rotation(rotate);
                     spawning_obj[0].set_scale(spawning_obj_scale);
-
-                    shader_program.use_();
-                    shader_program.set_uniform_int("draw_mode", draw_mode as i32);
-                    view_port.draw(&shader_program, &light_shader_program, 
-                        &mut camera, &spawning_obj, &light_objects);
-
-                    unsafe {
-                        gl::StencilFunc(gl::NOTEQUAL, 1, 0xFF);
-                        gl::StencilMask(0x00);
-                        gl::Disable(gl::DEPTH_TEST);
-                    }
-
-                    let obj_scale = spawning_obj[0].scale();
-                    let border_size = 0.1 * obj_scale;
-                    spawning_obj[0].set_scale(obj_scale + border_size);
-                    select_shader_program.use_();
-                    view_port.draw(&select_shader_program, 
-                        &select_shader_program, &mut camera, 
-                        &spawning_obj, &light_objects);
-                    spawning_obj[0].set_scale(obj_scale);
-
-                    unsafe {
-                        gl::StencilMask(0xFF);
-                        gl::StencilFunc(gl::ALWAYS, 1, 0xFF);
-                        gl::Enable(gl::DEPTH_TEST);
-                    }
                 }
 
+                depth_sort_objects(&mut render_objects, &camera);
+
+                shader_program.use_();
+                shader_program.set_uniform_int("draw_mode", draw_mode as i32);
+                view_port.draw(&shader_program, &light_shader_program, &mut camera, &render_objects, &light_objects);
+
+                shader_program.use_();
+                shader_program.set_uniform_int("draw_mode", draw_mode as i32);
+                if is_spawn_test {
+                    view_port.draw_selected_object(&shader_program,
+                        &light_shader_program, &select_shader_program, 
+                        &mut camera, &mut spawning_obj, &light_objects);
+                }
+
+                view_port.draw_frame_buffer(&frame_buffer_shader_program, &frame_buffer_mesh);
                 windowed_context.swap_buffers().unwrap();
             }
             _ => (),
@@ -635,6 +625,46 @@ fn prompt_for_monitor(event_loop: &event_loop::EventLoop<()>) -> monitor::Monito
 
 fn prompt_for_video_mode(monitor: &monitor::MonitorHandle) -> monitor::VideoMode {
     monitor.video_modes().nth(0).unwrap()
+}
+
+fn create_frame_buffer_mesh(frame_buffer: &FrameBuffer) -> Mesh {
+    let mut vertices: Vec<Vertex> = vec![];
+    let mut indices: Vec<u32> = vec![0, 3, 2,  0, 2, 1];
+
+    vertices.push(
+        Vertex {
+            position: vec3(-1.0, 1.0, 0.0),
+            normal: vec3(0.0, 0.0, 0.0),
+            tex_coords: vec2(0.0, 1.0),
+        }
+    );
+    vertices.push(
+        Vertex {
+            position: vec3(1.0, 1.0, 0.0),
+            normal: vec3(0.0, 0.0, 0.0),
+            tex_coords: vec2(1.0, 1.0),
+        }
+    );
+    vertices.push(
+        Vertex {
+            position: vec3(1.0, -1.0, 0.0),
+            normal: vec3(0.0, 0.0, 0.0),
+            tex_coords: vec2(1.0, 0.0),
+        }
+    );
+    vertices.push(
+        Vertex {
+            position: vec3(-1.0, -1.0, 0.0),
+            normal: vec3(0.0, 0.0, 0.0),
+            tex_coords: vec2(0.0, 0.0),
+        }
+    );
+
+    let mut new_mesh = Mesh::from_vertices(vertices, indices);
+    let mut new_material = objects::Material::new();
+    new_material.diff_tex = Some(frame_buffer.color_buffer.clone());
+    new_mesh.set_material(new_material);
+    return new_mesh;
 }
 
 fn load_spawn_objects() -> Vec<RenderObject> {
@@ -705,29 +735,3 @@ fn get_vector_length(a: Vector3<f32>, b: Vector3<f32>) -> f32 {
     let z = (b.z - a.z).powi(2);
     (x + y + z).sqrt()
 }
-
-// fn generate_float() -> f32 {
-//     let mut rng = rand::thread_rng();
-//     let result = rng.gen_range(0.0..256.0);
-//     return result;
-// }
-
-// fn generate_vector() -> Vector3<f32> {
-//     let mut rng = rand::thread_rng();
-//     let random1 = (rng.gen_range(-1000..1000) as f32) / 100.0;
-//     let random2 = (rng.gen_range(-1000..1000) as f32) / 100.0;
-//     let theta1 = random1 * 2.0 * f32::consts::PI;
-//     let theta2 = random2 * 2.0 * f32::consts::PI;
-//     let radius = (rng.gen_range(0..0_500_000) as f32).cbrt();
-
-//     let x = radius * (theta1.cos() * theta2.sin());
-//     let y = radius * theta1.sin();
-//     let z = radius * (theta1.cos() * theta2.cos());
-//     vec3(x, y, z)
-// }
-
-// fn generate_normal_vector() -> Vector3<f32> {
-//     let mut rng = rand::thread_rng();
-//     let mut generator = || -> f32 { (rng.gen_range(0..1000) as f32) / 10.0 };
-//     vec3(generator() / 100.0, generator() / 100.0, generator() / 100.0)
-// }

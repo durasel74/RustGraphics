@@ -9,6 +9,8 @@ mod view_port;
 mod material;
 mod light;
 mod vertex;
+mod frame_buffer;
+// mod render_buffer;
 mod misc;
 pub mod obj_loader;
 
@@ -24,5 +26,7 @@ pub use material::Material;
 pub use light::Light;
 pub use light::LightType;
 pub use vertex::Vertex;
+pub use frame_buffer::FrameBuffer;
+// pub use render_buffer::RenderBuffer;
 pub use misc::ShaderError;
 pub use misc::create_string_buffer;

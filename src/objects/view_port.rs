@@ -1,4 +1,5 @@
 use gl;
+use cgmath::{ Vector3, vec3 };
 use super::{ RenderObject, Mesh, ShaderProgram, Camera, Light, LightType };
 
 pub struct ViewPort {
@@ -19,6 +20,53 @@ impl ViewPort {
 
     pub fn size(&self) -> &(i32, i32) { &self.size }
     pub fn set_size(&mut self, value: (i32, i32)) { self.size = value; }
+
+    pub fn draw_frame_buffer(&self, frame_buffer_shader_program: &ShaderProgram, 
+    frame_buffer_mesh: &Mesh) {
+        unsafe {
+            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+            gl::Disable(gl::DEPTH_TEST);
+            gl::Disable(gl::STENCIL_TEST);
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0); 
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+        }
+        frame_buffer_shader_program.use_();
+        self.draw_mesh(&frame_buffer_shader_program, &frame_buffer_mesh);
+    }
+
+    pub fn draw_selected_object(&self, shader_program: &ShaderProgram, 
+    light_shader_program: &ShaderProgram, select_shader_program: &ShaderProgram,
+    camera: &mut Camera, spawning_obj: &mut Vec<RenderObject>, light_objects: &Vec<Light>) {
+        unsafe {
+            gl::StencilFunc(gl::ALWAYS, 1, 0xFF);
+            gl::StencilMask(0xFF);
+        }
+
+        self.draw(&shader_program, &light_shader_program, camera, &spawning_obj, 
+            &light_objects);
+
+        unsafe {
+            gl::StencilFunc(gl::NOTEQUAL, 1, 0xFF);
+            gl::StencilMask(0x00);
+            gl::Disable(gl::DEPTH_TEST);
+        }
+
+        let obj_scale = spawning_obj[0].scale();
+        let border_size = 0.1 * obj_scale;
+        spawning_obj[0].set_scale(obj_scale + border_size);
+
+        select_shader_program.use_();
+        self.draw(&select_shader_program, &select_shader_program, camera, 
+            &spawning_obj, &light_objects);
+        spawning_obj[0].set_scale(obj_scale);
+
+        unsafe {
+            gl::StencilMask(0xFF);
+            gl::StencilFunc(gl::ALWAYS, 1, 0xFF);
+            gl::Enable(gl::DEPTH_TEST);
+        }
+    }
 
     pub fn draw(&self, shader_program: &ShaderProgram, light_shader_program: &ShaderProgram,
     camera: &mut Camera, render_objects: &Vec<RenderObject>, light_objects: &Vec<Light>) {
@@ -51,7 +99,7 @@ impl ViewPort {
         }
     }
 
-    fn draw_mesh(&self, shader_program: &ShaderProgram, mesh: &Mesh) {
+    pub fn draw_mesh(&self, shader_program: &ShaderProgram, mesh: &Mesh) {
         shader_program.set_uniform_vector3("material.ambient", &mesh.material().ambient);
         shader_program.set_uniform_vector3("material.diffuse", &mesh.material().diffuse);
         shader_program.set_uniform_vector3("material.specular", &mesh.material().specular);

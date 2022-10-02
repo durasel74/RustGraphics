@@ -30,11 +30,11 @@ impl Texture {
                 }
             }
         }
-        Self::from_bytes(&pixels_data, img_size)
+        Ok(Self::from_bytes(&pixels_data, img_size))
     }
 
     /// Создает текстуру из байтов цвета изображения.
-    pub fn from_bytes(pixels_data: &Vec<u8>, img_size: (u32, u32)) -> Result<Self, ShaderError> {
+    pub fn from_bytes(pixels_data: &Vec<u8>, img_size: (u32, u32)) -> Self {
         let mut texture_id = 0;
         unsafe {
             gl::GenTextures(1, &mut texture_id);
@@ -50,7 +50,40 @@ impl Texture {
             gl::GenerateMipmap(gl::TEXTURE_2D);
             gl::BindTexture(gl::TEXTURE_2D, 0);
         }
-        Ok(Texture { id: texture_id })
+        Texture { id: texture_id }
+    }
+
+    /// Создает новую пустую текстуру
+    pub fn new_rgb(width: u32, height: u32, format: i32) -> Self {
+        let mut texture_id = 0;
+        unsafe {
+            gl::GenTextures(1, &mut texture_id);
+            gl::BindTexture(gl::TEXTURE_2D, texture_id);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+            gl::TexImage2D(gl::TEXTURE_2D, 0, format, width as i32, height as i32, 0, 
+                gl::RGBA, gl::UNSIGNED_BYTE, 0 as *const gl::types::GLvoid);
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+        }
+        Texture { id: texture_id }
+    }
+
+    /// Создает новую пустую текстуру для теста глубины и трафарета
+    pub fn new_depth_stencil(width: u32, height: u32) -> Self {
+        let mut texture_id = 0;
+        unsafe {
+            gl::GenTextures(1, &mut texture_id);
+            gl::BindTexture(gl::TEXTURE_2D, texture_id);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::DEPTH24_STENCIL8 as i32, 
+                width as i32, height as i32, 0, gl::DEPTH_STENCIL, gl::UNSIGNED_INT_24_8, 
+                0 as *const gl::types::GLvoid);
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+        }
+        Texture { id: texture_id }
     }
 }
 
